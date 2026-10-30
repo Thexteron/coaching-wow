@@ -1,0 +1,1041 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Coaching WoW</title><meta name="description" content="Coaching M+ et raid à partir des logs Warcraft Logs"><style>:root{--font-anthropic-sans:system-ui,sans-serif;--font-anthropic-serif:Georgia,serif;--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:16px;--cds-gap-lg:24px;--cds-gap-xl:32px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:20px;--cds-radius:8px;--cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:18px;--cds-font-size-title:28px;--cds-font-weight-medium:600;--color-fg:#1b1b1b;--color-fg-muted:#6b6b6b;--color-panel:#fff;--color-border-line:#e3e3e3;--color-ok:#178a3a;--color-warn:#b86e00;--color-bad:#c53030;--cds-chart-grid:#eee;--cds-chart-axis:#999;--cds-chart-reference:#888;--cds-chart-muted:#aaa;--cds-surface-popover:#fff;--cds-border:#ddd;--cds-shadow-popover:0 2px 8px rgba(0,0,0,.15);--cds-text-secondary:#666;--cds-dur-slow:.3s}body{background:#f6f6f4;margin:16px}</style><script src="d3.min.js"></script><script src="data.js"></script></head><body><script>
+window.dash=(()=>{const DATA=window.__DATA;let params={};const draws={};const ondata=[];const calcs={};
+const api={colors:['#2a6fdb','#d97706','#059669','#7c3aed'],
+data:(id)=>calcs[id]?{status:'ok',data:calcs[id].fn(...calcs[id].inputs.map(i=>DATA[i]))}:(DATA[id]?{status:'ok',data:DATA[id]}:{status:'loading'}),
+params:()=>params,setParams:(p)=>{params={...params,...p};run();},setLink:()=>{},onData:(fn)=>ondata.push(fn),draw:(n,fn)=>{draws[n]=fn;},calc:(id,d)=>{calcs[id]=d;}};
+const run=()=>{ondata.forEach(f=>{try{f()}catch(e){console.error('ondata '+e.stack)}});for(const [n,fn] of Object.entries(draws))document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{fn(el)}catch(e){console.error('draw '+n+': '+e.stack)}});};
+api._run=run;return api;})();</script>
+<style>
+  .cw { font-family: var(--font-anthropic-sans); display: grid; gap: var(--cds-gap-lg); max-width: 76rem; margin-inline: auto; }
+  .cw > *, .cw-page > *, .cw-grid2 > *, .cw-pane > * { min-width: 0; }
+  .cw-head { display: grid; gap: var(--cds-gap-md); }
+  .cw-head-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--cds-gap-xs) var(--cds-gap-lg); }
+  .cw-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .cw-take { margin: 0; color: var(--color-fg-muted); }
+  .cw-take b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .cw-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); min-height: 3rem; }
+  .cw-chartab { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--cds-pad-sm) var(--cds-pad-md); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-panel); color: var(--color-fg); cursor: pointer; font: inherit; text-align: left; }
+  .cw-chartab.is-on { border-color: var(--color-fg); box-shadow: inset 0 -3px 0 var(--color-fg); }
+  .cw-chartab-name { font-weight: var(--cds-font-weight-medium); }
+  .cw-chartab-spec { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cw-ctx { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm) var(--cds-gap-lg); }
+  .cw-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; background: var(--color-panel); }
+  .cw-seg button { appearance: none; border: 0; background: none; font: inherit; padding: var(--cds-pad-xs) var(--cds-pad-md); color: var(--color-fg-muted); cursor: pointer; }
+  .cw-seg button.is-on { background: var(--color-fg); color: var(--color-panel); font-weight: var(--cds-font-weight-medium); }
+  .cw-charline { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .cw-charline a { color: inherit; }
+  .cw-pages { display: flex; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); overflow-x: auto; }
+  .cw-page-tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); font: inherit; color: var(--color-fg-muted); cursor: pointer; margin-bottom: -1px; white-space: nowrap; }
+  .cw-page-tab.is-on { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .cw-page { display: grid; gap: var(--cds-gap-md); }
+  .cw-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+  .cw-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--cds-gap-md); }
+  .cw h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .cw h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-sm); }
+  .cw-note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0; }
+  .cw-meta { margin: 0; font-weight: var(--cds-font-weight-medium); }
+  .cw-scope { margin: var(--cds-gap-xs) 0 0; color: var(--color-fg-muted); }
+  .cw-good h3 { color: var(--color-ok); }
+  .cw-bad h3 { color: var(--color-bad); }
+  .cw-list { margin: 0; padding-left: 1.1rem; display: grid; gap: var(--cds-gap-sm); }
+  .cw-prio { border-left: 4px solid var(--color-warn); }
+  .cw-prio-main { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-sm); }
+  .cw-prio-how { margin: 0; }
+  .cw-tablewrap { overflow-x: auto; padding: var(--cds-pad-sm) var(--cds-pad-md); }
+  .cw-tablewrap.cw-flush { padding: 0; }
+  .cw-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .cw-table th { text-align: left; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .cw-table td { padding: var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: middle; }
+  .cw-table tbody tr:last-child td { border-bottom: 0; }
+  .cw-table .cw-num { text-align: right; white-space: nowrap; }
+  .cw-table tr.cw-you td, .cw-table tr.cw-boss td:first-child { font-weight: var(--cds-font-weight-medium); }
+  .cw-table tr.cw-seg-row td:first-child { color: var(--color-fg-muted); }
+  .cw-t-ok { color: var(--color-ok); }
+  .cw-t-warn { color: var(--color-warn); }
+  .cw-t-bad { color: var(--color-bad); }
+  .cw-gauge { display: flex; align-items: center; gap: var(--cds-gap-xs); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); white-space: nowrap; }
+  .cw-spark svg { display: block; overflow: visible; }
+  .cw-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+  .cw-tip-h { color: var(--cds-text-secondary); }
+  .cw-empty { display: grid; gap: var(--cds-gap-xs); }
+  .cw-empty p { margin: 0; }
+  .cw-link { color: inherit; }
+  .cw-md { display: grid; grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); gap: var(--cds-gap-lg); align-items: start; }
+  .cw-runs { position: sticky; top: var(--cds-gap-md); }
+  .cw-runs .cw-sub-h { margin-top: 0; }
+  .cw-runlist { display: grid; gap: var(--cds-gap-xs); max-height: 75vh; overflow-y: auto; padding: 2px; }
+  .cw-run { appearance: none; text-align: left; font: inherit; color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); cursor: pointer; display: grid; gap: 2px; }
+  .cw-run.is-on { border-color: var(--color-fg); box-shadow: inset 3px 0 0 var(--color-fg); }
+  .cw-run-name { font-weight: var(--cds-font-weight-medium); }
+  .cw-run-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cw-detail { display: grid; gap: var(--cds-gap-md); min-width: 0; }
+  .cw-detail-head h2 { margin: 0 0 2px; }
+  .cw-inner { display: flex; gap: var(--cds-gap-xs); flex-wrap: wrap; }
+  .cw-inner button { appearance: none; font: inherit; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg-muted); border-radius: 999px; padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
+  .cw-inner button.is-on { color: var(--color-panel); background: var(--color-fg); border-color: var(--color-fg); }
+  .cw-pane { display: grid; gap: var(--cds-gap-md); }
+  @media (max-width: 760px) {
+    .cw-md { grid-template-columns: minmax(0, 1fr); }
+    .cw-runs { position: static; }
+    .cw-runlist { display: flex; overflow-x: auto; max-height: none; }
+    .cw-run { flex: none; min-width: 11rem; }
+  }
+  .cw-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); margin: 0 0 var(--cds-gap-sm); padding: 0; list-style: none; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cw-legend li { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+  .cw-sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .cw-sw-series { width: 14px; height: 6px; border-radius: 2px; }
+  .cw-sw-ring { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--cds-chart-axis); background: var(--color-panel); }
+  .cw-sw-ring-ok { border: 2.5px solid var(--color-ok); }
+  .cw-sw-ring-warn { border: 2.5px solid var(--color-warn); }
+  .cw-sw-death { width: 8px; height: 8px; border-radius: 1px; transform: rotate(45deg); background: var(--color-bad); }
+  .cw-sw-band { width: 14px; height: 10px; border-radius: 2px; background: var(--cds-chart-grid); }
+  .cw-sw-bl { width: 0; height: 12px; border-radius: 0; border-left: 2px dashed var(--cds-chart-reference); }
+  .cw-tl { position: relative; min-height: 290px; }
+  .cw-tl svg { display: block; overflow: visible; }
+  .cw-sub-h { margin: var(--cds-gap-md) 0 var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); text-transform: uppercase; letter-spacing: .04em; }
+  .cw-fiche-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-sm) var(--cds-gap-xl); }
+  .cw-fiche-grid > * { min-width: 0; }
+  .cw-fiche-grid > div > .cw-sub-h:first-child { margin-top: 0; }
+  .cw-plan { margin: 0; padding-left: 1.3rem; display: grid; gap: var(--cds-gap-md); }
+  .cw-death-txt { display: block; min-width: 0; }
+  .cw-death-txt b { display: block; font-weight: var(--cds-font-weight-medium); }
+  .cw-plan-detail { display: block; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.45; }
+  .cw-deaths { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--cds-gap-sm); }
+  .cw-deaths li { display: flex; gap: var(--cds-gap-sm); align-items: flex-start; }
+  .cw-ico { flex: none; border-radius: 4px; display: block; }
+  .cw-bars { display: grid; gap: var(--cds-gap-md); }
+  .cw-bar-head { display: flex; align-items: center; gap: var(--cds-gap-sm); margin-bottom: var(--cds-gap-xs); }
+  .cw-bar-name { font-weight: var(--cds-font-weight-medium); flex: 1; min-width: 0; }
+  .cw-chip { font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cw-bar-line { display: grid; grid-template-columns: 2.6rem 1fr auto; align-items: center; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); }
+  .cw-bar-who { color: var(--color-fg-muted); }
+  .cw-bar-track { height: 8px; border-radius: 4px; background: var(--cds-chart-grid); overflow: hidden; }
+  .cw-bar-fill { display: block; height: 100%; border-radius: 4px; }
+  .cw-fill-you { background: var(--color-bad); }
+  .cw-fill-tops { background: var(--cds-chart-muted); }
+  .cw-bar-val { font-variant-numeric: tabular-nums; min-width: 5.5rem; text-align: right; }
+  .cw-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-sm); margin: var(--cds-gap-sm) 0 var(--cds-gap-md); }
+  .cw-kpi { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); }
+  .cw-kpi-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+  .cw-kpi-v { margin: 2px 0 0; font-variant-numeric: tabular-nums; color: var(--color-fg-muted); }
+  .cw .cw-kpi-v b { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-heading); color: var(--color-fg); }
+  .cw-route-lists { margin-top: var(--cds-gap-sm); }
+  .cw [hidden] { display: none !important; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  [data-dash-source-state=empty] { color: transparent; }
+</style>
+
+<div class="cw">
+  <header class="cw-head" id="haut">
+    <div class="cw-head-top">
+      <h1>Coaching WoW</h1>
+      <p class="cw-take cw-when-report">Priorité du moment : <b data-draw="take" data-source="reports" class="dash-skeleton">—</b></p>
+    </div>
+    <div class="cw-tabs" role="tablist" aria-label="Personnages" id="personnages" data-draw="chartabs" data-source="characters">—</div>
+    <div class="cw-ctx">
+      <div class="cw-seg" role="tablist" aria-label="Contenu">
+        <button type="button" class="is-on" role="tab" id="mythique" data-content="M+" aria-selected="true">Mythique+</button>
+        <button type="button" role="tab" id="raid" data-content="Raid" aria-selected="false">Raid</button>
+      </div>
+      <p class="cw-charline" data-draw="charline" data-source="characters">—</p>
+    </div>
+    <nav class="cw-pages cw-when-report" role="tablist" aria-label="Pages">
+      <button type="button" class="cw-page-tab is-on" role="tab" id="onglet-rapport" data-page="rapport" aria-selected="true">Rapport</button>
+      <button type="button" class="cw-page-tab" role="tab" id="onglet-indicateurs" data-page="indicateurs" aria-selected="false">Indicateurs</button>
+      <button type="button" class="cw-page-tab" role="tab" id="onglet-loupe" data-page="loupe" aria-selected="false"><span class="cw-mplus-only">Clé à la loupe</span><span class="cw-raid-only" hidden>Combat à la loupe</span></button>
+      <button type="button" class="cw-page-tab" role="tab" id="onglet-historique" data-page="historique" aria-selected="false">Historique</button>
+    </nav>
+  </header>
+
+  <section class="cw-card cw-empty cw-when-empty" id="vide" hidden>
+    <h2>Pas encore de rapport ici</h2>
+    <p class="cw-empty-mplus">Le premier rapport Mythique+ de ce personnage arrivera le soir de sa prochaine clé loggée sur Warcraft Logs.</p>
+    <p class="cw-empty-raid">Le premier rapport de raid arrivera le mercredi qui suit un raid loggé sur Warcraft Logs.</p>
+  </section>
+
+  <section class="cw-page" id="rapport" data-page-of="rapport">
+    <div>
+      <p class="cw-meta"><span data-draw="repdate" data-source="reports">—</span> · <span data-draw="reptitle" data-source="reports">—</span></p>
+      <p class="cw-scope" data-draw="repscope" data-source="reports">—</p>
+    </div>
+    <div class="cw-card cw-prio" id="priorite">
+      <h3>Priorité n°1</h3>
+      <p class="cw-prio-main" data-draw="prio" data-source="reports">—</p>
+      <p class="cw-prio-how" data-draw="how" data-source="reports">—</p>
+    </div>
+    <div class="cw-grid2">
+      <div class="cw-card cw-good" id="bien">
+        <h3>Ce qui a été</h3>
+        <ul class="cw-list" data-draw="good" data-source="report_items"></ul>
+      </div>
+      <div class="cw-card cw-bad" id="pas-bien">
+        <h3>Ce qui n'a pas été</h3>
+        <ul class="cw-list" data-draw="bad" data-source="report_items"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="cw-page" id="indicateurs" data-page-of="indicateurs" hidden>
+    <p class="cw-note">Valeurs du dernier rapport. « Tops » est la médiane des joueurs comparés : 5 par clé ou par boss, même contenu et même niveau, ilvl à ±3, sans buff externe, en priorité avec le même type de tank que toi. La jauge montre où tu en es par rapport à eux (pleine = à leur niveau). La petite courbe montre chaque clé ou combat, du plus ancien au plus récent : vert au niveau des tops ou mieux, rouge en dessous, pointillés = tops.</p>
+    <div class="cw-card cw-tablewrap">
+      <table class="cw-table" id="table-indicateurs" data-source="metrics" data-row-key="row_id">
+        <thead>
+          <tr>
+            <th data-field="label">Indicateur</th>
+            <th class="cw-num" data-field="you">Toi</th>
+            <th class="cw-num" data-field="tops">Tops</th>
+            <th>Jauge</th>
+            <th>Clé par clé</th>
+            <th class="cw-num" data-source="ecarts" data-field="gap_pct">Écart (%)</th>
+            <th class="cw-num" data-source="ecarts" data-field="delta">Depuis le rapport précédent</th>
+          </tr>
+        </thead>
+        <tbody data-draw="indicators" data-source="metrics run_metrics runs"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="cw-page" id="loupe" data-page-of="loupe" hidden>
+    <div class="cw-md">
+      <aside class="cw-runs" aria-label="Passages analysés">
+        <p class="cw-sub-h cw-mplus-only">Clés analysées</p>
+        <p class="cw-sub-h cw-raid-only" hidden>Combats analysés</p>
+        <div class="cw-runlist" data-draw="runlist" data-source="runs"></div>
+      </aside>
+      <div class="cw-detail">
+        <div class="cw-detail-head">
+          <h2 data-draw="runtitle" data-source="runs">—</h2>
+          <p class="cw-note" data-draw="runsub" data-source="runs characters">—</p>
+        </div>
+        <div class="cw-inner" role="tablist" aria-label="Vue">
+          <button type="button" role="tab" class="is-on" id="vue-courbe" data-pane="courbe" aria-selected="true">Courbe des CD</button>
+          <button type="button" role="tab" id="vue-fiche" data-pane="fiche" aria-selected="false">Fiche</button>
+          <button type="button" role="tab" class="cw-mplus-only" id="vue-route" data-pane="route" aria-selected="false">Route</button>
+          <button type="button" role="tab" id="vue-joueurs" data-pane="joueurs" aria-selected="false">Joueurs comparés</button>
+        </div>
+
+        <div class="cw-pane" id="timeline" data-pane-of="courbe">
+          <div class="cw-card">
+            <h3><span class="cw-heal">Tes gros CD face aux pics de dégâts</span><span class="cw-dps" hidden>Tes défensifs face aux pics de dégâts</span></h3>
+            <p class="cw-note cw-heal">La courbe montre les dégâts subis par tout le groupe, par seconde. Un gros CD (Totem de marée de soins, Totem de lien d'esprit, Ascendance) compte « dans un pic » quand les dégâts du groupe, de 2 s avant à 8 s après, sont parmi les 30 % les plus forts du combat. Survole la courbe pour voir les sorts lancés à ce moment.</p>
+            <p class="cw-note cw-dps" hidden>La courbe montre les dégâts subis par tout le groupe, par seconde. Un défensif (Feinte, Cape d'ombre, Évasion) compte « dans un pic » quand les dégâts du groupe, de 2 s avant à 8 s après, sont parmi les 30 % les plus forts du combat. Les petites icônes sont Marque létale, ton bijou, tes potions et Fiole cramoisie. Survole la courbe pour voir les sorts lancés à ce moment.</p>
+            <ul class="cw-legend">
+              <li><span class="cw-sw cw-sw-series"></span>Dégâts subis par le groupe</li>
+              <li><span class="cw-sw cw-sw-ring cw-sw-ring-ok"></span><span class="cw-heal">Gros CD dans un pic</span><span class="cw-dps" hidden>Défensif dans un pic</span></li>
+              <li><span class="cw-sw cw-sw-ring cw-sw-ring-warn"></span><span class="cw-heal">Gros CD hors pic</span><span class="cw-dps" hidden>Défensif hors pic</span></li>
+              <li><span class="cw-sw cw-sw-ring"></span><span class="cw-heal">Autre CD, défensif ou bijou</span><span class="cw-dps" hidden>CD offensif, bijou, potion ou soin perso</span></li>
+              <li><span class="cw-sw cw-sw-bl"></span>Furie sanguinaire ou Héroïsme</li>
+              <li><span class="cw-sw cw-sw-death"></span>Ta mort</li>
+              <li class="cw-mplus-only"><span class="cw-sw cw-sw-band"></span>Combat de boss</li>
+            </ul>
+            <p class="cw-note"><span class="cw-heal">Gros CD dans un pic</span><span class="cw-dps" hidden>Défensifs dans un pic</span> sur ce passage : <b data-draw="cdyou" data-source="comparisons">—</b> pour toi, <b data-draw="cdtops" data-source="groups">—</b> chez les tops comparés.</p>
+            <div class="cw-tl" id="timeline-toi" data-draw="tlme" data-source="timeline cd_events route_items comparisons"></div>
+          </div>
+          <div class="cw-card cw-raid-only" id="timeline-top" hidden>
+            <h3>Un top sur le même boss : <span data-draw="topname" data-source="groups">—</span></h3>
+            <p class="cw-note">Même lecture que ta courbe : regarde où il pose ses <span class="cw-heal">gros CD</span><span class="cw-dps" hidden>défensifs</span> par rapport aux pics.</p>
+            <div class="cw-tl" data-draw="tltop" data-source="timeline cd_events groups comparisons"></div>
+          </div>
+        </div>
+
+        <div class="cw-pane" id="fiche" data-pane-of="fiche" hidden>
+          <div class="cw-card">
+            <div class="cw-fiche-grid">
+              <div>
+                <p class="cw-sub-h">Ton plan</p>
+                <ol class="cw-plan" data-draw="plan" data-source="fiche_items"></ol>
+                <p class="cw-sub-h">Tes morts</p>
+                <ul class="cw-deaths" data-draw="deaths" data-source="fiche_items"></ul>
+                <p class="cw-note cw-nodeath" hidden>Aucune mort sur ce passage.</p>
+              </div>
+              <div>
+                <p class="cw-sub-h">Ce qui te coûte des dégâts</p>
+                <p class="cw-note">Dégâts par minute sur toi, face à la médiane des tops comparés.</p>
+                <div class="cw-bars" data-draw="persobars" data-source="fiche_items"></div>
+                <p class="cw-note cw-noperso" hidden>Rien de notable : tu ne prends pas plus que les tops.</p>
+                <div class="cw-mplus-only">
+                  <p class="cw-sub-h">Ce qui coûte au groupe</p>
+                  <p class="cw-note">Dégâts par minute sur tout le groupe : souvent un cast à interrompre ou une zone à éviter.</p>
+                  <div class="cw-bars" data-draw="groupebars" data-source="fiche_items"></div>
+                  <p class="cw-note cw-nogroupe" hidden>Rien de notable : le groupe ne prend pas plus que ceux des tops.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cw-pane" id="route" data-pane-of="route" hidden>
+          <div class="cw-card">
+            <h3>Ta route face à celle des tops</h3>
+            <p class="cw-note">Toutes les clés ne font pas les mêmes packs. On compare donc ce que vous faites tous les deux : chaque boss, et le trash entre deux boss. Le temps d'un boss compte ses wipes. Les morts sont les tiennes, face à la médiane de celles des 5 tops.</p>
+            <div class="cw-kpis">
+              <div class="cw-kpi"><p class="cw-kpi-l">Monstres en commun avec les tops</p><p class="cw-kpi-v"><b data-draw="rsim" data-source="route_items">—</b></p></div>
+              <div class="cw-kpi"><p class="cw-kpi-l">Durée de la clé, toi / tops</p><p class="cw-kpi-v"><b data-draw="rdur" data-source="route_items">—</b> / <span data-draw="rtopdur" data-source="route_items">—</span></p></div>
+              <div class="cw-kpi"><p class="cw-kpi-l">Packs que les tops ne font pas</p><p class="cw-kpi-v"><b data-draw="rplus" data-source="route_items">—</b></p></div>
+            </div>
+            <div class="cw-tablewrap cw-flush">
+              <table class="cw-table" data-source="route_items" data-row-key="item_id">
+                <thead>
+                  <tr>
+                    <th data-field="label">Étape</th>
+                    <th class="cw-num">Ton temps</th>
+                    <th class="cw-num">Tops</th>
+                    <th class="cw-num">Écart</th>
+                    <th class="cw-num">Morts (toi · tops)</th>
+                    <th class="cw-num">Wipes</th>
+                    <th class="cw-num"><span class="cw-heal">Gros CD</span><span class="cw-dps" hidden>Défensifs</span> dans un pic (toi · tops)</th>
+                  </tr>
+                </thead>
+                <tbody data-draw="routerows"></tbody>
+              </table>
+            </div>
+            <div class="cw-grid2 cw-route-lists">
+              <div>
+                <p class="cw-sub-h">Packs que tu fais en plus</p>
+                <ul class="cw-deaths" data-draw="rpluslist" data-source="route_items"></ul>
+                <p class="cw-note cw-noplus" hidden>Aucun : tu fais les mêmes packs que les tops.</p>
+              </div>
+              <div>
+                <p class="cw-sub-h">Monstres que les tops tuent et pas toi</p>
+                <ul class="cw-deaths" data-draw="rmoins" data-source="route_items"></ul>
+                <p class="cw-note cw-nomoins" hidden>Aucun : tu tues les mêmes monstres qu'eux.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cw-pane" id="compares" data-pane-of="joueurs" hidden>
+          <div class="cw-card">
+            <p class="cw-note">Les 5 joueurs de ta spé retenus dans le classement pour ce donjon et ce niveau, ou ce boss et cette difficulté : sans buff externe, ilvl à ±3, en priorité avec le même type de tank que toi. « Route en commun » : part des monstres que vous avez tués tous les deux.</p>
+            <div class="cw-tablewrap cw-flush">
+              <table class="cw-table" data-source="comparisons" data-row-key="row_id">
+                <thead>
+                  <tr>
+                    <th>Joueur</th>
+                    <th class="cw-num" data-field="ilvl">ilvl</th>
+                    <th data-field="tank">Tank</th>
+                    <th>Même tank</th>
+                    <th class="cw-num">Route en commun</th>
+                    <th class="cw-num" data-field="perf"><span class="cw-heal">HPS</span><span class="cw-dps" hidden>DPS</span></th>
+                    <th class="cw-num" data-field="cd_spike"><span class="cw-heal">Gros CD</span><span class="cw-dps" hidden>Défensifs</span> dans un pic</th>
+                    <th>Log</th>
+                  </tr>
+                </thead>
+                <tbody data-draw="comprows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cw-page" id="historique" data-page-of="historique" hidden>
+    <div class="cw-card cw-tablewrap">
+      <h3 class="cw-mplus-only">Clés analysées</h3>
+      <h3 class="cw-raid-only" hidden>Combats analysés</h3>
+      <table class="cw-table" id="table-cles" data-source="runs" data-row-key="run_id">
+        <thead>
+          <tr>
+            <th data-field="date">Date</th>
+            <th data-field="name">Donjon ou boss</th>
+            <th data-field="level">Niveau</th>
+            <th data-field="result">Résultat</th>
+            <th class="cw-num" data-field="time">Temps</th>
+            <th class="cw-num" data-field="perf">HPS ou DPS</th>
+            <th>Log</th>
+          </tr>
+        </thead>
+        <tbody data-draw="runrows"></tbody>
+      </table>
+    </div>
+    <div class="cw-card cw-tablewrap">
+      <h3>Tous les rapports</h3>
+      <table class="cw-table" id="table-rapports" data-source="reports" data-row-key="report_id">
+        <thead>
+          <tr>
+            <th data-field="date">Date</th>
+            <th data-field="title">Rapport</th>
+            <th data-field="priority">Priorité n°1</th>
+          </tr>
+        </thead>
+        <tbody data-draw="history"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="cw-note">Analyses tirées des logs publics Warcraft Logs, mises à jour le 29/10/2026 à 23h40. Chaque clé et chaque boss sont comparés à 5 joueurs de la même spé du top 100, sans buff externe.</p>
+</div>
+
+<script>
+  window.cw = (() => {
+    const fr = d3.formatLocale({decimal: ',', thousands: ' ', grouping: [3], currency: ['', '']});
+    const fmt = (v, dec, unit) => (v === null || v === undefined || v === '' || isNaN(+v)) ? '—' : fr.format(',.' + (dec || 0) + 'f')(+v) + (unit ? ' ' + unit : '');
+    const signed = (v, dec, unit) => (v === null || v === undefined || isNaN(+v)) ? '—' : (+v > 0 ? '+' : '') + fmt(v, dec, unit);
+    const rowsOf = (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) ? d.data : null; };
+    const state = () => {
+      const chars = rowsOf('characters') || [];
+      const p = dash.params();
+      const known = chars.some((c) => c.character === p.char);
+      const character = known ? p.char : (chars[0] ? chars[0].character : null);
+      const content = p.content === 'Raid' ? 'Raid' : 'M+';
+      return {chars, character, content};
+    };
+    const latestReport = (s) => {
+      const reps = (rowsOf('reports') || []).filter((r) => r.character === s.character && r.content === s.content);
+      reps.sort((a, b) => d3.descending(a.date, b.date) || d3.descending(a.report_id, b.report_id));
+      return reps[0] || null;
+    };
+    const dmy = (s) => (typeof s === 'string' && s.length >= 10) ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '—';
+    const dm = (s) => (typeof s === 'string' && s.length >= 10) ? s.slice(8, 10) + '/' + s.slice(5, 7) : '—';
+    const safeUrl = (u) => (typeof u === 'string' && /^https:\/\/(www\.)?warcraftlogs\.com\//.test(u)) ? u : null;
+    const mark = (el, source, field, key, value) => { el.setAttribute('data-source', source); el.setAttribute('data-field', field); el.setAttribute('data-where', key + '=' + encodeURIComponent(value)); };
+    const unmark = (el) => { el.removeAttribute('data-field'); el.removeAttribute('data-where'); };
+    const mmss = (s) => { const v = Math.max(0, Math.floor(+s || 0)); return Math.floor(v / 60) + ':' + String(v % 60).padStart(2, '0'); };
+    const myRuns = (s) => (rowsOf('runs') || []).filter((r) => r.character === s.character && r.content === s.content)
+      .sort((a, b) => d3.descending(a.date, b.date) || d3.descending(a.run_id, b.run_id));
+    const pickRun = (s) => { const rs = myRuns(s); const p = dash.params().run; return rs.find((r) => r.run_id === p) || rs[0] || null; };
+    const youRow = (run) => { const c = rowsOf('comparisons'); return (c && run) ? c.find((r) => r.is_you && r.run_id === run.run_id) || null : null; };
+    const groupRow = (gid) => { const g = rowsOf('groups'); return (g && gid) ? g.find((r) => r.group_id === gid) || null : null; };
+    const groupOf = (run) => { const y = youRow(run); return y ? y.group_id : null; };
+    const compact = (v) => (+v >= 1e6 ? fmt(+v / 1e6, 1) + ' M' : fmt(+v / 1e3, 0) + ' k');
+    const td = (text, extra) => { const c = document.createElement('td'); c.textContent = text; if (extra) c.className = extra; return c; };
+    const linkTd = (url, label) => { const c = document.createElement('td'); if (url) { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.className = 'cw-link'; a.textContent = label; c.append(a); } return c; };
+
+    // Courbe des dégâts du groupe, icônes des CD au-dessus, morts en bas.
+    const timeline = (el, pts, evs, bands) => {
+      el.replaceChildren();
+      if (!pts.length) return;
+      pts = pts.slice().sort((a, b) => a.t - b.t);
+      evs = evs.slice().sort((a, b) => a.t - b.t);
+      const step = pts.length > 1 ? pts[1].t - pts[0].t : 10;
+      const W = Math.max(280, el.clientWidth || 640);
+      const BIG = 20, SMALL = 16, bottom = 22;
+      const laneY = [4, 4 + BIG + 6, 4 + BIG + 6 + SMALL + 4, 4 + BIG + 6 + 2 * (SMALL + 4)];
+      const top = laneY[3] + SMALL + 10;
+      const h = top + 190 + bottom;
+      const tmax = d3.max(pts, (p) => p.t) + step;
+      const y = d3.scaleLinear([0, (d3.max(pts, (p) => +p.dtps) || 1) * 1.08], [h - bottom, top]).nice(3);
+      const ticks = y.ticks(3);
+      const svg = d3.create('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`);
+      const tmp = document.createElement('div');
+      tmp.style.cssText = 'position:absolute;visibility:hidden;left:-9999px';
+      el.append(tmp);
+      tmp.append(svg.node());
+      const yl = svg.append('g').selectAll('text').data(ticks).join('text')
+        .attr('y', (v) => y(v)).attr('dy', '0.32em').attr('text-anchor', 'end')
+        .style('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((v) => (v === 0 ? '0' : compact(v)));
+      const labelW = d3.max(yl.nodes(), (n) => n.getComputedTextLength()) || 24;
+      const endLbl = svg.append('text').style('font-size', 'var(--cds-font-size-caption)').text(mmss(tmax));
+      const endW = endLbl.node().getComputedTextLength() || 30;
+      endLbl.remove();
+      tmp.remove();
+      const ml = Math.ceil(labelW) + 8, mr = Math.max(Math.ceil(endW / 2) + 4, BIG / 2 + 2);
+      yl.attr('x', ml - 6);
+      const x = d3.scaleLinear([0, tmax], [ml, W - mr]);
+      const nT = Math.max(2, Math.min(8, Math.floor((W - ml - mr) / (endW + 36))));
+      const xt = x.ticks(nT).filter((t) => t >= 0 && t <= tmax);
+      svg.insert('g', ':first-child').selectAll('line').data(ticks).join('line')
+        .attr('x1', ml).attr('x2', W - mr).attr('y1', (v) => y(v)).attr('y2', (v) => y(v)).style('stroke', 'var(--cds-chart-grid)');
+      svg.append('g').selectAll('text').data(xt).join('text')
+        .attr('x', (t) => x(t)).attr('y', h - 4).attr('text-anchor', 'middle')
+        .style('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((t) => mmss(t));
+      const gid = 'cw-grad-' + Math.random().toString(36).slice(2);
+      const grad = svg.append('defs').append('linearGradient').attr('id', gid).attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 1);
+      [[0, .26], [.25, .16], [.5, .08], [.75, .03], [1, 0]].forEach(([o, a]) => grad.append('stop').attr('offset', o).attr('stop-opacity', a).style('stop-color', dash.colors[0]));
+      const bandG = svg.append('g');
+      for (const bd of (bands || [])) {
+        const x0 = x(bd.t), x1 = x(bd.e);
+        if (!(x1 > x0)) continue;
+        bandG.append('rect').attr('x', x0).attr('width', x1 - x0).attr('y', top - 4).attr('height', h - bottom - top + 4)
+          .style('fill', 'var(--cds-chart-grid)').style('opacity', bd.kill === false ? 0.45 : 0.9);
+        const words = String(bd.label).replace(/^L'/, '').split(' ').filter((w) => !/^(Le|La|Les|Du|De)$/.test(w));
+        const short = [String(bd.label), words[0] || ''].find((t) => t && t.length * 6.4 <= x1 - x0 - 8);
+        if (short) bandG.append('text').attr('x', x0 + 4).attr('y', top + 8).style('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(short);
+      }
+      const ptsX = pts.map((p) => ({t: p.t + step / 2, v: +p.dtps}));
+      svg.append('path').datum(ptsX).attr('d', d3.area((p) => x(p.t), y(0), (p) => y(p.v))).style('fill', `url(#${gid})`);
+      svg.append('path').datum(ptsX).attr('d', d3.line((p) => x(p.t), (p) => y(p.v)))
+        .style('fill', 'none').style('stroke', dash.colors[0]).style('stroke-width', 2).style('stroke-linejoin', 'round').style('stroke-linecap', 'round');
+      // Placement des icônes : gros CD sur la ligne du haut, les autres sur deux lignes en dessous, sans se chevaucher.
+      const marks = [];
+      const last = [-1e9, -1e9, -1e9, -1e9];
+      for (const e of evs.filter((e) => e.kind !== 'mort')) {
+        const cx = x(e.t);
+        const big = e.kind === 'gros';
+        const size = big ? BIG : SMALL;
+        const lanes = big ? [0, 1, 2, 3] : [1, 2, 3];
+        let lane = lanes.find((l) => cx - last[l] >= (l === 0 ? BIG : Math.max(size, SMALL)) + 2);
+        if (lane === undefined) lane = lanes.reduce((a, l) => (last[l] < last[a] ? l : a), lanes[0]);
+        last[lane] = cx + (size - SMALL) / 2;
+        marks.push({e, cx, size, y0: laneY[lane]});
+      }
+      const ringColor = (e) => (e.kind === 'gros' ? (e.in_spike ? 'var(--color-ok)' : 'var(--color-warn)') : 'var(--cds-chart-axis)');
+      svg.append('g').selectAll('line').data(marks.filter((m) => m.e.kind === 'gros' || m.e.kind === 'bl')).join('line')
+        .attr('x1', (m) => m.cx).attr('x2', (m) => m.cx).attr('y1', (m) => m.y0 + m.size).attr('y2', h - bottom)
+        .style('stroke', (m) => (m.e.kind === 'bl' ? 'var(--cds-chart-reference)' : ringColor(m.e)))
+        .style('stroke-width', (m) => (m.e.kind === 'bl' ? 1.5 : 1))
+        .style('stroke-dasharray', (m) => (m.e.kind === 'bl' ? '4 3' : null))
+        .style('stroke-opacity', (m) => (m.e.kind === 'bl' ? 1 : 0.5));
+      const ic = svg.append('g').selectAll('g').data(marks).join('g').attr('transform', (m) => `translate(${m.cx - m.size / 2},${m.y0})`);
+      ic.append('rect').attr('x', -1.5).attr('y', -1.5).attr('width', (m) => m.size + 3).attr('height', (m) => m.size + 3).attr('rx', 3)
+        .style('fill', 'var(--color-panel)').style('stroke', (m) => ringColor(m.e)).style('stroke-width', (m) => (m.e.kind === 'gros' ? 2.5 : 1));
+      ic.filter((m) => !!m.e.icon).append('image').attr('href', (m) => m.e.icon).attr('width', (m) => m.size).attr('height', (m) => m.size)
+        .attr('preserveAspectRatio', 'xMidYMid slice');
+      const dead = evs.filter((e) => e.kind === 'mort');
+      svg.append('g').selectAll('rect').data(dead).join('rect')
+        .attr('x', -4.5).attr('y', -4.5).attr('width', 9).attr('height', 9).attr('rx', 1)
+        .attr('transform', (e) => `translate(${x(e.t)},${h - bottom - 7}) rotate(45)`)
+        .style('fill', 'var(--color-bad)').style('stroke', 'var(--color-panel)').style('stroke-width', 1);
+      const rule = svg.append('line').attr('y1', top - 6).attr('y2', h - bottom).style('stroke', 'var(--cds-chart-axis)').style('stroke-width', 1).attr('visibility', 'hidden');
+      const tip = document.createElement('div');
+      tip.className = 'cw-tip';
+      tip.hidden = true;
+      const tipH = document.createElement('div');
+      tipH.className = 'cw-tip-h';
+      const tipV = document.createElement('div');
+      const tipE = document.createElement('div');
+      tip.append(tipH, tipV, tipE);
+      const bis = d3.bisector((p) => p.t).center;
+      const label = (e) => (e.kind === 'mort' ? 'Mort' + (e.spell ? ' (' + e.spell + ')' : '') : e.spell) + ' à ' + mmss(e.t)
+        + (e.kind === 'gros' ? (e.in_spike ? ', dans un pic' : ', hors pic') : '');
+      svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml - mr).attr('height', h).style('fill', 'transparent')
+        .on('pointermove', (event) => {
+          const [mx] = d3.pointer(event);
+          const t = x.invert(mx);
+          const p = ptsX[Math.max(0, Math.min(ptsX.length - 1, bis(ptsX, t)))];
+          rule.attr('x1', x(t)).attr('x2', x(t)).attr('visibility', 'visible');
+          const inBand = (bands || []).find((bd) => t >= bd.t && t <= bd.e);
+          tipH.textContent = mmss(t) + (inBand ? ' · ' + inBand.label + (inBand.kill === false ? ' (wipe)' : '') : '');
+          tipV.textContent = 'Groupe : ' + compact(p.v) + ' de dégâts par seconde';
+          const near = evs.filter((e) => Math.abs(e.t - t) <= Math.max(4, step)).map(label);
+          tipE.textContent = near.join(' · ');
+          tipE.hidden = !near.length;
+          tip.hidden = false;
+          const box = el.getBoundingClientRect();
+          const sb = svg.node().getBoundingClientRect();
+          const k = sb.width / W;
+          const px = sb.left - box.left + x(t) * k;
+          const tw = tip.offsetWidth;
+          tip.style.left = Math.max(4, Math.min(box.width - tw - 4, px - tw / 2)) + 'px';
+          tip.style.top = Math.max(0, sb.top - box.top + top * k) + 'px';
+        })
+        .on('pointerleave', () => { tip.hidden = true; rule.attr('visibility', 'hidden'); });
+      el.append(svg.node(), tip);
+    };
+    return {fmt, signed, rowsOf, state, latestReport, dmy, dm, safeUrl, mark, unmark, mmss, myRuns, pickRun, youRow, groupRow, groupOf, compact, td, linkTd, timeline};
+  })();
+</script>
+
+<script>
+  dash.calc('ecarts', {
+    inputs: ['metrics'],
+    title: 'Écart avec les tops',
+    description: 'Pour chaque indicateur : écart en % entre ta valeur et la médiane des tops, et variation depuis le rapport précédent du même perso.',
+    fn: (metrics) => metrics.map((m) => {
+      const prev = metrics
+        .filter((p) => p.character === m.character && p.content === m.content && p.metric === m.metric && p.date < m.date)
+        .sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+      return {
+        row_id: m.row_id,
+        gap_pct: m.tops ? Math.round(((m.you - m.tops) / m.tops) * 1000) / 10 : null,
+        delta: prev ? Math.round((m.you - prev.you) * 100) / 100 : null,
+      };
+    }),
+  });
+</script>
+
+<script>
+  const PAGES = ['rapport', 'indicateurs', 'loupe', 'historique'];
+  const PANES = ['courbe', 'fiche', 'route', 'joueurs'];
+  document.querySelectorAll('.cw-seg button').forEach((b) => {
+    b.addEventListener('click', () => { dash.setParams({content: b.dataset.content}); dash.setLink(b.id); });
+  });
+  document.querySelectorAll('.cw-page-tab').forEach((b) => {
+    b.addEventListener('click', () => { dash.setParams({page: b.dataset.page}); dash.setLink(b.dataset.page); });
+  });
+  document.querySelectorAll('.cw-inner button').forEach((b) => {
+    b.addEventListener('click', () => { dash.setParams({pane: b.dataset.pane}); dash.setLink(b.id); });
+  });
+  const hash = location.hash.slice(1);
+  if (hash === 'raid') dash.setParams({content: 'Raid'});
+  if (PAGES.includes(hash)) dash.setParams({page: hash});
+  if (hash.startsWith('vue-') && PANES.includes(hash.slice(4))) dash.setParams({page: 'loupe', pane: hash.slice(4)});
+
+  dash.onData(() => {
+    const s = cw.state();
+    const p = dash.params();
+    const page = PAGES.includes(p.page) ? p.page : 'rapport';
+    let pane = PANES.includes(p.pane) ? p.pane : 'courbe';
+    if (pane === 'route' && s.content !== 'M+') pane = 'courbe';
+    const empty = dash.data('reports').status === 'ok' && !cw.latestReport(s);
+    const pick = (sel, on) => document.querySelectorAll(sel).forEach((b) => {
+      const yes = on(b);
+      b.classList.toggle('is-on', yes);
+      b.setAttribute('aria-selected', yes ? 'true' : 'false');
+    });
+    pick('.cw-seg button', (b) => b.dataset.content === s.content);
+    pick('.cw-page-tab', (b) => b.dataset.page === page);
+    pick('.cw-inner button', (b) => b.dataset.pane === pane);
+    const ch = s.chars.find((c) => c.character === s.character);
+    const heal = !ch || ch.rank_metric !== 'dps';
+    document.querySelectorAll('.cw-heal').forEach((el) => { el.hidden = !heal; });
+    document.querySelectorAll('.cw-dps').forEach((el) => { el.hidden = heal; });
+    document.querySelectorAll('.cw-mplus-only').forEach((el) => { el.hidden = s.content !== 'M+'; });
+    document.querySelectorAll('.cw-raid-only').forEach((el) => { el.hidden = s.content !== 'Raid'; });
+    document.querySelectorAll('.cw-when-report').forEach((el) => { el.hidden = empty; });
+    document.querySelectorAll('.cw-when-empty').forEach((el) => { el.hidden = !empty; });
+    document.querySelectorAll('.cw-empty-mplus').forEach((el) => { el.hidden = s.content !== 'M+'; });
+    document.querySelectorAll('.cw-empty-raid').forEach((el) => { el.hidden = s.content !== 'Raid'; });
+    document.querySelectorAll('[data-page-of]').forEach((el) => { el.hidden = empty || el.dataset.pageOf !== page; });
+    document.querySelectorAll('[data-pane-of]').forEach((el) => { el.hidden = el.dataset.paneOf !== pane; });
+    document.querySelectorAll('.cw-sw-series').forEach((el) => { el.style.background = dash.colors[0]; });
+  });
+</script>
+
+<script>
+  dash.draw('chartabs', (el) => {
+    const chars = cw.rowsOf('characters');
+    if (!chars) { el.textContent = '—'; return; }
+    const s = cw.state();
+    el.replaceChildren(...chars.map((c) => {
+      const b = document.createElement('button');
+      const on = c.character === s.character;
+      b.type = 'button';
+      b.className = 'cw-chartab' + (on ? ' is-on' : '');
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      const n = document.createElement('span');
+      n.className = 'cw-chartab-name';
+      n.textContent = c.character;
+      const sp = document.createElement('span');
+      sp.className = 'cw-chartab-spec';
+      sp.textContent = [c.spec, c.class].filter(Boolean).join(' ');
+      b.append(n, sp);
+      b.addEventListener('click', () => dash.setParams({char: c.character}));
+      return b;
+    }));
+  });
+
+  dash.draw('charline', (el) => {
+    const chars = cw.rowsOf('characters');
+    const s = cw.state();
+    const c = chars && chars.find((x) => x.character === s.character);
+    if (!c) { el.textContent = '—'; return; }
+    const parts = [];
+    const t = document.createElement('span');
+    t.textContent = [c.class, c.spec].filter(Boolean).join(' ') + ' · ' + c.realm + ' (' + c.region + ')';
+    parts.push(t);
+    const url = cw.safeUrl(c.wcl_url);
+    if (url) {
+      const sep = document.createElement('span');
+      sep.textContent = ' · ';
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = 'Warcraft Logs';
+      parts.push(sep, a);
+    }
+    el.replaceChildren(...parts);
+  });
+
+  const reportField = (name, field, show) => dash.draw(name, (el) => {
+    const st = dash.data('reports').status;
+    const rep = st === 'ok' ? cw.latestReport(cw.state()) : null;
+    el.classList.remove('dash-skeleton');
+    if (!rep) { el.textContent = '—'; cw.unmark(el); return; }
+    el.textContent = show ? show(rep[field]) : rep[field];
+    cw.mark(el, 'reports', field, 'report_id', rep.report_id);
+  });
+  reportField('take', 'priority');
+  reportField('repdate', 'date', cw.dmy);
+  reportField('reptitle', 'title');
+  reportField('repscope', 'scope');
+  reportField('prio', 'priority');
+  reportField('how', 'how');
+
+  const itemList = (name, kind) => dash.draw(name, (el) => {
+    const items = cw.rowsOf('report_items');
+    const rep = cw.latestReport(cw.state());
+    if (!items || !rep) { el.replaceChildren(); return; }
+    const mine = items.filter((it) => it.report_id === rep.report_id && it.kind === kind).sort((a, b) => a.n - b.n);
+    el.replaceChildren(...mine.map((it) => {
+      const li = document.createElement('li');
+      li.textContent = it.text;
+      cw.mark(li, 'report_items', 'text', 'item_id', it.item_id);
+      return li;
+    }));
+  });
+  itemList('good', 'good');
+  itemList('bad', 'bad');
+</script>
+
+<script>
+  dash.draw('runrows', (tbody) => {
+    const runs = cw.rowsOf('runs');
+    const s = cw.state();
+    if (!runs) { tbody.replaceChildren(); return; }
+    const mine = runs.filter((r) => r.character === s.character && r.content === s.content)
+      .sort((a, b) => d3.descending(a.date, b.date) || d3.descending(a.run_id, b.run_id));
+    tbody.replaceChildren(...mine.map((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.run_id;
+      const td = (text, extra) => { const c = document.createElement('td'); c.textContent = text; if (extra) c.className = extra; return c; };
+      const okRes = /^(Dans les temps|Kill)/.test(r.result || '');
+      const link = document.createElement('td');
+      const url = cw.safeUrl(r.report_url);
+      if (url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.className = 'cw-link';
+        a.textContent = 'Ouvrir';
+        link.append(a);
+      }
+      tr.append(td(cw.dmy(r.date)), td(r.name), td(r.level), td(r.result, okRes ? 'cw-t-ok' : 'cw-t-warn'), td(r.time, 'cw-num'), td(cw.fmt(r.perf, 0), 'cw-num'), link);
+      return tr;
+    }));
+  });
+
+  dash.draw('history', (tbody) => {
+    const reps = cw.rowsOf('reports');
+    const s = cw.state();
+    if (!reps) { tbody.replaceChildren(); return; }
+    const mine = reps.filter((r) => r.character === s.character && r.content === s.content)
+      .sort((a, b) => d3.descending(a.date, b.date) || d3.descending(a.report_id, b.report_id));
+    tbody.replaceChildren(...mine.map((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.report_id;
+      const td = (text) => { const c = document.createElement('td'); c.textContent = text; return c; };
+      tr.append(td(cw.dmy(r.date)), td(r.title), td(r.priority));
+      return tr;
+    }));
+  });
+</script>
+
+<script>
+  dash.draw('indicators', (tbody) => {
+    const mets = cw.rowsOf('metrics');
+    const rm = cw.rowsOf('run_metrics') || [];
+    const calc = dash.data('ecarts');
+    const ec = calc.status === 'ok' && Array.isArray(calc.data) ? new Map(calc.data.map((r) => [r.row_id, r])) : new Map();
+    const s = cw.state();
+    if (!mets) { tbody.replaceChildren(); return; }
+    const runs = cw.myRuns(s).slice().reverse();
+    const idx = new Map(runs.map((r, i) => [r.run_id, i]));
+    const mine = mets.filter((m) => m.character === s.character && m.content === s.content);
+    const last = d3.max(mine, (m) => m.date);
+    const rows = mine.filter((m) => m.date === last).sort((a, b) => a.order - b.order);
+    tbody.replaceChildren(...rows.map((m) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = m.row_id;
+      const dec = +m.decimals || 0;
+      const lower = m.better === 'lower';
+      const tops = +m.tops;
+      const good = (v) => (lower ? v <= tops : v >= tops);
+      const ratio = (+m.you > 0 && tops > 0) ? (lower ? tops / +m.you : +m.you / tops) : 0;
+      const cls = ratio >= 0.98 ? 'cw-t-ok' : ratio >= 0.8 ? 'cw-t-warn' : 'cw-t-bad';
+      const g = ec.get(m.row_id) || {};
+      const gaugeTd = document.createElement('td');
+      const wrap = document.createElement('div');
+      wrap.className = 'cw-gauge';
+      const gsvg = d3.create('svg').attr('width', 96).attr('height', 8).attr('viewBox', '0 0 96 8');
+      gsvg.append('rect').attr('width', 96).attr('height', 8).attr('rx', 4).style('fill', 'var(--cds-chart-grid)');
+      gsvg.append('rect').attr('width', Math.max(4, Math.min(1, ratio) * 96)).attr('height', 8).attr('rx', 4)
+        .style('fill', cls === 'cw-t-ok' ? 'var(--color-ok)' : cls === 'cw-t-warn' ? 'var(--color-warn)' : 'var(--color-bad)');
+      const dir = document.createElement('span');
+      dir.textContent = lower ? '↓ mieux' : '↑ mieux';
+      wrap.append(gsvg.node(), dir);
+      gaugeTd.append(wrap);
+      // Petite courbe clé par clé
+      const sparkTd = document.createElement('td');
+      sparkTd.className = 'cw-spark';
+      const pts = rm.filter((r) => r.character === s.character && r.content === s.content && r.metric === m.metric && idx.has(r.run_id))
+        .map((r) => ({i: idx.get(r.run_id), v: +r.value, run: runs[idx.get(r.run_id)]})).sort((a, b) => a.i - b.i);
+      if (pts.length) {
+        const W = 140, H = 30;
+        const x = d3.scalePoint(pts.map((q) => q.i), [5, W - 5]).padding(0.3);
+        const vals = [...pts.map((q) => q.v), ...(tops > 0 ? [tops] : [])];
+        const lo = d3.min(vals), hi = d3.max(vals);
+        const pad = (hi - lo) * 0.15 || Math.abs(hi) * 0.1 || 1;
+        const y = d3.scaleLinear([lo - pad, hi + pad], [H - 4, 4]);
+        const sv = d3.create('svg').attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+        if (tops > 0) sv.append('line').attr('x1', 2).attr('x2', W - 2).attr('y1', y(tops)).attr('y2', y(tops))
+          .style('stroke', 'var(--cds-chart-reference)').style('stroke-width', 1).style('stroke-dasharray', '3 2');
+        if (pts.length > 1) sv.append('path').datum(pts).attr('d', d3.line((q) => x(q.i), (q) => y(q.v)))
+          .style('fill', 'none').style('stroke', dash.colors[0]).style('stroke-width', 1.5).style('stroke-linejoin', 'round');
+        const dots = sv.append('g').selectAll('circle').data(pts).join('circle')
+          .attr('cx', (q) => x(q.i)).attr('cy', (q) => y(q.v)).attr('r', (q, k) => (k === pts.length - 1 ? 3.5 : 2.5))
+          .style('fill', (q) => (good(q.v) ? 'var(--color-ok)' : 'var(--color-bad)')).style('stroke', 'var(--color-panel)').style('stroke-width', 1);
+        dots.append('title').text((q) => cw.dm(q.run.date) + ' · ' + q.run.name + ' ' + q.run.level + ' : ' + cw.fmt(q.v, dec, m.unit));
+        sparkTd.append(sv.node());
+      }
+      const gapGood = g.gap_pct === null || g.gap_pct === undefined ? '' : ((lower ? g.gap_pct <= 0 : g.gap_pct >= 0) ? 'cw-t-ok' : 'cw-t-bad');
+      const deltaGood = g.delta === null || g.delta === undefined || g.delta === 0 ? '' : ((lower ? g.delta < 0 : g.delta > 0) ? 'cw-t-ok' : 'cw-t-bad');
+      tr.append(
+        cw.td(m.label),
+        cw.td(cw.fmt(m.you, dec, m.unit), 'cw-num ' + cls),
+        cw.td(cw.fmt(m.tops, dec, m.unit), 'cw-num'),
+        gaugeTd,
+        sparkTd,
+        cw.td(cw.signed(g.gap_pct, 0), 'cw-num ' + gapGood),
+        cw.td(cw.signed(g.delta, Math.max(dec, 1)), 'cw-num ' + deltaGood),
+      );
+      return tr;
+    }));
+  });
+</script>
+
+<script>
+  dash.draw('runlist', (box) => {
+    const s = cw.state();
+    const rs = cw.myRuns(s);
+    const cur = cw.pickRun(s);
+    box.replaceChildren(...rs.map((r) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      const on = !!cur && r.run_id === cur.run_id;
+      b.className = 'cw-run' + (on ? ' is-on' : '');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const n = document.createElement('span');
+      n.className = 'cw-run-name';
+      n.textContent = r.name + ' ' + r.level;
+      const sub = document.createElement('span');
+      sub.className = 'cw-run-sub';
+      const ok = /^(Dans les temps|Kill)/.test(r.result || '');
+      const res = document.createElement('span');
+      res.className = ok ? 'cw-t-ok' : 'cw-t-warn';
+      res.textContent = r.result;
+      sub.append(cw.dm(r.date) + ' · ', res);
+      b.append(n, sub);
+      b.addEventListener('click', () => dash.setParams({run: r.run_id}));
+      return b;
+    }));
+  });
+
+  dash.draw('runtitle', (el) => {
+    const r = cw.pickRun(cw.state());
+    if (!r) { el.textContent = '—'; cw.unmark(el); return; }
+    el.textContent = r.name + ' ' + r.level;
+    cw.mark(el, 'runs', 'name', 'run_id', r.run_id);
+  });
+  dash.draw('runsub', (el) => {
+    const r = cw.pickRun(cw.state());
+    if (!r) { el.textContent = '—'; return; }
+    const s = cw.state();
+    const c = s.chars.find((x) => x.character === s.character);
+    const unit = c && c.rank_metric === 'dps' ? ' DPS' : ' HPS';
+    el.textContent = [cw.dmy(r.date), r.result, r.time, cw.fmt(r.perf, 0) + unit].filter(Boolean).join(' · ');
+  });
+
+  dash.draw('cdyou', (el) => {
+    const y = cw.youRow(cw.pickRun(cw.state()));
+    if (!y) { el.textContent = '—'; cw.unmark(el); return; }
+    el.textContent = cw.fmt(y.cd_spike, 0, '%');
+    cw.mark(el, 'comparisons', 'cd_spike', 'row_id', y.row_id);
+  });
+
+  const groupStat = (name, field, show) => dash.draw(name, (el) => {
+    const g = cw.groupRow(cw.groupOf(cw.pickRun(cw.state())));
+    if (!g || g[field] === null || g[field] === undefined) { el.textContent = '—'; cw.unmark(el); return; }
+    el.textContent = show(g[field]);
+    cw.mark(el, 'groups', field, 'group_id', g.group_id);
+  });
+  groupStat('cdtops', 'top_cd', (v) => cw.fmt(v, 0, '%'));
+  groupStat('topname', 'top_timeline', (v) => v);
+
+  dash.draw('tlme', (el) => {
+    const run = cw.pickRun(cw.state());
+    const tl = cw.rowsOf('timeline');
+    const ev = cw.rowsOf('cd_events');
+    if (!run || !tl || !ev) { el.replaceChildren(); return; }
+    const ri = cw.rowsOf('route_items') || [];
+    const gid = cw.groupOf(run);
+    const bands = ri.filter((r) => r.group_id === gid && r.kind === 'bosswin');
+    cw.timeline(el, tl.filter((p) => p.run_id === run.run_id), ev.filter((e) => e.run_id === run.run_id), bands);
+  });
+
+  dash.draw('tltop', (el) => {
+    const g = cw.groupRow(cw.groupOf(cw.pickRun(cw.state())));
+    const tl = cw.rowsOf('timeline');
+    const ev = cw.rowsOf('cd_events');
+    if (!g || !g.top_timeline || !tl || !ev) { el.replaceChildren(); return; }
+    const mine = (r) => r.group_id === g.group_id && !r.run_id && r.who === g.top_timeline;
+    cw.timeline(el, tl.filter(mine), ev.filter(mine));
+  });
+
+  const itemsOf = (source, kind) => {
+    const rows = cw.rowsOf(source);
+    const gid = cw.groupOf(cw.pickRun(cw.state()));
+    if (!rows || !gid) return null;
+    return rows.filter((r) => r.group_id === gid && r.kind === kind).sort((a, b) => a.n - b.n);
+  };
+  const iconEl = (src, size) => {
+    const img = document.createElement('img');
+    img.className = 'cw-ico';
+    img.width = size;
+    img.height = size;
+    img.alt = '';
+    if (src && /^(\/_blob\/|icons\/)/.test(src)) img.src = src; else img.style.visibility = 'hidden';
+    return img;
+  };
+  const twoLines = (lead, detail, source, key, id) => {
+    const wrap = document.createElement('span');
+    wrap.className = 'cw-death-txt';
+    const b = document.createElement('b');
+    b.textContent = lead;
+    cw.mark(b, source, 'label', key, id);
+    const d = document.createElement('span');
+    d.className = 'cw-plan-detail';
+    d.textContent = detail || '';
+    wrap.append(b, d);
+    return wrap;
+  };
+
+  dash.draw('plan', (ol) => {
+    const items = itemsOf('fiche_items', 'plan') || [];
+    ol.replaceChildren(...items.map((it) => {
+      const li = document.createElement('li');
+      li.append(twoLines(it.label, it.detail, 'fiche_items', 'item_id', it.item_id));
+      return li;
+    }));
+  });
+
+  const bars = (name, kind, flag) => dash.draw(name, (box) => {
+    const items = itemsOf('fiche_items', kind);
+    document.querySelectorAll(flag).forEach((p) => { p.hidden = !(items && items.length === 0); });
+    if (!items) { box.replaceChildren(); return; }
+    const max = d3.max(items, (it) => Math.max(+it.you || 0, +it.tops || 0)) || 1;
+    box.replaceChildren(...items.map((it) => {
+      const row = document.createElement('div');
+      row.className = 'cw-bar';
+      const head = document.createElement('div');
+      head.className = 'cw-bar-head';
+      const nm = document.createElement('span');
+      nm.className = 'cw-bar-name';
+      nm.textContent = it.label;
+      cw.mark(nm, 'fiche_items', 'label', 'item_id', it.item_id);
+      const chip = document.createElement('span');
+      chip.className = 'cw-chip cw-t-bad';
+      chip.textContent = it.ratio ? '×' + cw.fmt(it.ratio, 1) : 'eux : presque rien';
+      head.append(iconEl(it.icon, 20), nm, chip);
+      const line = (who, v, cls) => {
+        const l = document.createElement('div');
+        l.className = 'cw-bar-line';
+        const lab = document.createElement('span');
+        lab.className = 'cw-bar-who';
+        lab.textContent = who;
+        const track = document.createElement('span');
+        track.className = 'cw-bar-track';
+        const fill = document.createElement('span');
+        fill.className = 'cw-bar-fill ' + cls;
+        fill.style.width = Math.max(1, (100 * (+v || 0)) / max) + '%';
+        track.append(fill);
+        const val = document.createElement('span');
+        val.className = 'cw-bar-val';
+        val.textContent = cw.compact(v) + '/min';
+        l.append(lab, track, val);
+        return l;
+      };
+      row.append(head, line('Toi', it.you, 'cw-fill-you'), line('Tops', it.tops, 'cw-fill-tops'));
+      return row;
+    }));
+  });
+  bars('persobars', 'perso', '.cw-noperso');
+  bars('groupebars', 'groupe', '.cw-nogroupe');
+
+  dash.draw('deaths', (ul) => {
+    const items = itemsOf('fiche_items', 'mort');
+    document.querySelectorAll('.cw-nodeath').forEach((p) => { p.hidden = !(items && items.length === 0); });
+    ul.replaceChildren(...(items || []).map((it) => {
+      const li = document.createElement('li');
+      li.append(iconEl(it.icon, 20), twoLines(it.label, it.detail, 'fiche_items', 'item_id', it.item_id));
+      return li;
+    }));
+  });
+
+  // ----- Route
+  const resumeOf = () => { const r = itemsOf('route_items', 'resume'); return r && r.length ? r[0] : null; };
+  const resumeStat = (name, show, field) => dash.draw(name, (el) => {
+    const r = resumeOf();
+    if (!r || r[field] === null || r[field] === undefined) { el.textContent = '—'; cw.unmark(el); return; }
+    el.textContent = show(r);
+    cw.mark(el, 'route_items', field, 'item_id', r.item_id);
+  });
+  resumeStat('rsim', (r) => cw.fmt(r.sim, 0, '%'), 'sim');
+  resumeStat('rdur', (r) => cw.mmss(r.you_dur), 'you_dur');
+  resumeStat('rtopdur', (r) => cw.mmss(r.tops_dur), 'tops_dur');
+  resumeStat('rplus', (r) => (r.packs ? r.packs + ' (' + cw.mmss(r.extra_dur) + ')' : '0'), 'packs');
+
+  const signedTime = (d) => (d === null || d === undefined || isNaN(d) ? '—' : (d > 0 ? '+' : d < 0 ? '−' : '') + cw.mmss(Math.abs(d)));
+  dash.draw('routerows', (tbody) => {
+    const rows = cw.rowsOf('route_items');
+    const gid = cw.groupOf(cw.pickRun(cw.state()));
+    if (!rows || !gid) { tbody.replaceChildren(); return; }
+    const mine = rows.filter((r) => r.group_id === gid && (r.kind === 'seg' || r.kind === 'boss')).sort((a, b) => a.n - b.n);
+    tbody.replaceChildren(...mine.map((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.item_id;
+      tr.className = r.kind === 'boss' ? 'cw-boss' : 'cw-seg-row';
+      const you = r.kind === 'boss' ? r.you_total : r.you_dur;
+      const tops = r.kind === 'boss' ? r.tops_total : r.tops_dur;
+      const d = (you !== null && tops !== null && you !== undefined && tops !== undefined) ? you - tops : null;
+      const dcls = d === null ? '' : d >= 30 ? 'cw-t-bad' : d <= -10 ? 'cw-t-ok' : '';
+      const deaths = cw.fmt(r.you_deaths, 0) + ' · ' + cw.fmt(r.tops_deaths, 0);
+      const dCls = (+r.you_deaths || 0) > (+r.tops_deaths || 0) ? 'cw-t-bad' : '';
+      const wipes = r.kind === 'boss' ? cw.fmt(r.wipes, 0) : '—';
+      const cd = r.kind === 'boss' ? (cw.fmt(r.you_cd, 0, '%') + ' · ' + cw.fmt(r.tops_cd, 0, '%')) : '—';
+      const name = cw.td(r.label);
+      cw.mark(name, 'route_items', 'label', 'item_id', r.item_id);
+      tr.append(name, cw.td(cw.mmss(you), 'cw-num'), cw.td(tops === null || tops === undefined ? '—' : cw.mmss(tops), 'cw-num'),
+        cw.td(signedTime(d), 'cw-num ' + dcls), cw.td(deaths, 'cw-num ' + dCls), cw.td(wipes, 'cw-num' + (r.wipes ? ' cw-t-bad' : '')), cw.td(cd, 'cw-num'));
+      return tr;
+    }));
+  });
+
+  dash.draw('rpluslist', (ul) => {
+    const items = itemsOf('route_items', 'plus');
+    document.querySelectorAll('.cw-noplus').forEach((p) => { p.hidden = !(items && items.length === 0); });
+    ul.replaceChildren(...(items || []).map((it) => {
+      const li = document.createElement('li');
+      li.append(twoLines(it.label, cw.mmss(it.t) + ' · ' + cw.mmss(it.you_dur) + (it.detail ? ' · ' + it.detail : ''), 'route_items', 'item_id', it.item_id));
+      return li;
+    }));
+  });
+  dash.draw('rmoins', (ul) => {
+    const items = itemsOf('route_items', 'moins');
+    document.querySelectorAll('.cw-nomoins').forEach((p) => { p.hidden = !(items && items.length === 0); });
+    ul.replaceChildren(...(items || []).map((it) => {
+      const li = document.createElement('li');
+      li.append(twoLines(it.label, it.count ? '×' + cw.fmt(it.count, 0) + ' chez les tops' : '', 'route_items', 'item_id', it.item_id));
+      return li;
+    }));
+  });
+
+  dash.draw('comprows', (tbody) => {
+    const run = cw.pickRun(cw.state());
+    const rows = cw.rowsOf('comparisons');
+    const gid = cw.groupOf(run);
+    if (!run || !rows || !gid) { tbody.replaceChildren(); return; }
+    const mine = rows.filter((r) => r.group_id === gid)
+      .sort((a, b) => (a.is_you === b.is_you ? 0 : a.is_you ? -1 : 1) || d3.ascending(a.date || '', b.date || '') || a.order - b.order);
+    tbody.replaceChildren(...mine.map((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.row_id;
+      if (r.is_you && r.run_id === run.run_id) tr.className = 'cw-you';
+      const who = r.is_you ? 'Toi · ' + cw.dm(r.date) + ' · ' + r.result : r.who;
+      const same = r.same_comp === true ? 'Oui' : r.same_comp === false ? 'Non' : '—';
+      tr.append(
+        cw.td(who), cw.td(cw.fmt(r.ilvl, 0), 'cw-num'), cw.td(r.tank), cw.td(same, r.same_comp === true ? 'cw-t-ok' : ''),
+        cw.td(r.route_pct === null || r.route_pct === undefined ? '—' : cw.fmt(r.route_pct, 0, '%'), 'cw-num'),
+        cw.td(cw.fmt(r.perf, 0), 'cw-num'), cw.td(cw.fmt(r.cd_spike, 0, '%'), 'cw-num'),
+        cw.linkTd(cw.safeUrl(r.report_url), 'Ouvrir'),
+      );
+      return tr;
+    }));
+  });
+</script>
+
+<script>dash._run();</script></body></html>
