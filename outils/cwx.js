@@ -3,7 +3,7 @@
 // Utilisation : CWX.run(spec) ; puis CWX.status() jusqu'à state "done" ; puis CWX.part('pulls') etc.
 window.CWX = (() => {
   'use strict';
-  const VERSION = '1.1';
+  const VERSION = '1.2';
   const LOW = 35, HIGH = 45; // passage sous 35 % de vie, sorti au-dessus de 45 %
 
   // Défensifs majeurs par spé (spec Warcraft Logs) : guid -> [nom français, recharge en s, durée en s].
@@ -384,19 +384,23 @@ window.CWX = (() => {
       } catch (e) { log('mort ' + d.i + ' ignorée : ' + e.message); }
     }
     for (const [c, D] of Object.entries(charData)) {
-      const rows = [];
+      // séries compactes : une valeur par tranche de 10 s depuis le début de la clé (t = 10 × index)
+      const ser = {perf: []};
+      if (D.tk) Object.assign(ser, {self_k: [], heal_k: [], am: [], hp_min: []});
       const N = Math.ceil((us.end - us.start) / 10000);
       for (let k = 0; k < N; k++) {
         const a = S + k * 10000, b = Math.min(us.end, a + 10000), len = (b - a) / 1000;
-        if (len <= 0) continue;
-        const r = [k * 10, kilo(integ(D.sYou, a, b) / len)];
+        if (len <= 0) break;
+        ser.perf.push(kilo(integ(D.sYou, a, b) / len));
         if (D.tk) {
           const hpw = D.tk.hp.filter(([ts]) => ts >= a && ts < b).map(([, v]) => v);
-          r.push(kilo(integ(D.tk.taken, a, b) / len), kilo(integ(D.tk.heal, a, b) / len), r0(covered(D.tk.bands, a, b) / (len * 10)), hpw.length ? Math.min(...hpw) : null);
+          ser.self_k.push(kilo(integ(D.tk.taken, a, b) / len)); ser.heal_k.push(kilo(integ(D.tk.heal, a, b) / len));
+          ser.am.push(r0(covered(D.tk.bands, a, b) / (len * 10))); ser.hp_min.push(hpw.length ? Math.min(...hpw) : '');
         }
-        rows.push(r);
       }
-      out.timeline.push({character: c, run_id: D.P.run_id, fields: D.tk ? ['t', 'perf', 'self_k', 'heal_k', 'am', 'hp_min'] : ['t', 'perf'], rows});
+      const tl = {character: c, run_id: D.P.run_id, step: 10};
+      for (const [k, v] of Object.entries(ser)) tl[k] = v.map((x) => x === null ? '' : x).join(',');
+      out.timeline.push(tl);
       if (D.tk) D.tk.dips.forEach((dp, k) => out.vie.push({row_id: D.P.run_id + '-toi-vie-' + (k + 1), character: c, group_id: D.P.group_id, run_id: D.P.run_id, who: 'Toi', t: Math.round(rel(dp.s)), spell: 'Sous ' + LOW + ' % de vie (' + Math.round(dp.min) + ' %)', spell_en: 'Low health', icon: null, kind: 'vie', p: Math.round(dp.min), in_spike: null}));
     }
 
