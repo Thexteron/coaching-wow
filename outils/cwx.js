@@ -421,7 +421,10 @@ window.CWX = (() => {
           // priorité : CD que les tops posent ici et pas toi, puis ceux que tu poses et pas eux, puis le reste ; 3 au plus
           const rank = (x) => (!x[4] && x[2] >= 50) ? 0 : (x[4] && x[2] < 50) ? 1 : 2;
           cd.sort((a, b) => rank(a) - rank(b) || b[2] - a[2]);
-          if (cd.length) row.chars[c].cd = cd.slice(0, 3).map((x) => x.slice(0, 4));
+          // on ne garde que les écarts (tops oui et toi non, ou l'inverse) ; same = nombre de CD posés comme eux
+          const diff = cd.filter((x) => rank(x) < 2);
+          if (diff.length) row.chars[c].cd = diff.slice(0, 3).map((x) => x.slice(0, 4));
+          row.chars[c].same = cd.filter((x) => rank(x) === 2 && x[4]).length;
         }
         // cibles (DPS et tank) : part de tes dégâts sur chaque monstre, face aux tops
         if (D.gtgYou) {
@@ -436,7 +439,7 @@ window.CWX = (() => {
           const names = new Set([...Object.keys(ys), ...ts.flatMap((x) => Object.keys(x))]);
           const tg = [...names].map((nm) => [nm, ys[nm] || 0, ts.length ? med(ts.map((x) => x[nm] || 0)) : null])
             .sort((a, b) => Math.max(b[1], b[2] || 0) - Math.max(a[1], a[2] || 0)).slice(0, 3).map(([nm, y, t]) => [nm, r0(y), r0(t)]);
-          if (tg.length && tg.some((x) => x[1] > 0 || x[2] > 0)) row.chars[c].tg = tg;
+          if (tg.length && tg.some((x) => x[2] !== null && Math.abs(x[1] - x[2]) >= 5)) row.chars[c].tg = tg;
         }
         if (D.tk) {
           const tt = integ(D.tk.taken, p.s, p.e), th = integ(D.tk.heal, p.s, p.e);
@@ -558,7 +561,7 @@ window.CWX = (() => {
       }
     }
     // format compact (v 2) : noms dans un dictionnaire par clé, chiffres des persos en tableaux
-    // c[perso] = [p, m, lo, hi, d, f, mn, k, nt, cd, tg] ; cd = [[nom, [sur…], % tops, sur (tops)]] ; tg = [[monstre, % toi, % tops]] ; hurt = [[sort, toi k/s, tops k/s]]
+    // c[perso] = [p, m, lo, hi, d, f, mn, k, nt, cd, tg, same] ; tg vide = mêmes cibles que les tops ; same = gros CD posés ici comme les tops ; cd = [[nom, [sur…], % tops, sur (tops)]] ; tg = [[monstre, % toi, % tops]] ; hurt = [[sort, toi k/s, tops k/s]]
     const dict = [], idx = new Map();
     const ref = (nm) => { if (nm === null || nm === undefined) return -1; nm = nm === 'Melee' ? 'Mêlée' : String(nm); if (!idx.has(nm)) { idx.set(nm, dict.length); dict.push(nm); } return idx.get(nm); };
     for (const row of out.pulls) {
@@ -567,7 +570,7 @@ window.CWX = (() => {
       for (const [c, x] of Object.entries(row.chars || {})) {
         const cd = (x.cd || []).map(([nm, yon, pct, ton]) => [ref(nm), yon.map(ref), pct, ref(ton)]);
         const tg = (x.tg || []).map(([nm, y, t]) => [ref(nm), y, t]);
-        c2[c] = [x.p, x.m, x.lo, x.hi, x.d, x.f, x.mn, x.k, x.nt, cd, tg];
+        c2[c] = [x.p, x.m, x.lo, x.hi, x.d, x.f, x.mn, x.k, x.nt, cd, tg, x.same || 0];
       }
       delete row.chars; row.c = c2; row.v = 2;
     }
