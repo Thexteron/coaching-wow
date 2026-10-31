@@ -135,7 +135,6 @@ api._run=run;return api;})();</script>
     <div class="cw-ctx">
       <div class="cw-seg" role="tablist" aria-label="Contenu">
         <button type="button" class="is-on" role="tab" id="mythique" data-content="M+" aria-selected="true">Mythique+</button>
-        <button type="button" role="tab" id="raid" data-content="Raid" aria-selected="false">Raid</button>
       </div>
       <p class="cw-charline" data-draw="charline" data-source="characters">—</p>
     </div>
@@ -378,7 +377,7 @@ api._run=run;return api;})();</script>
       const p = dash.params();
       const known = chars.some((c) => c.character === p.char);
       const character = known ? p.char : (chars[0] ? chars[0].character : null);
-      const content = p.content === 'Raid' ? 'Raid' : 'M+';
+      const content = 'M+';
       return {chars, character, content};
     };
     const latestReport = (s) => {
