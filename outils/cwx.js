@@ -358,24 +358,22 @@ window.CWX = (() => {
       // ce qui fait mal au groupe sur ce pull, face aux tops (tous les tops des persos suivis, sans doublon)
       {
         const youAb = realSeries(usGab).map((sr) => [sr.guid, sr.name, dur > 0 ? integ(sr, p.s, p.e) / dur : 0]);
-        const topsAb = {};
+        const perTop = [], names = {};
         for (const o of uniqTops) {
           const mine = o.F.pulls.map((tp, k) => [tp, share(o.asg, k, i)]).filter((x) => x[1] > 0);
           const w = mine.reduce((sm, [, v]) => sm + v, 0);
           if (w < 0.25 || !o.gab) continue;
           const td = mine.reduce((sm, [tp, v]) => sm + v * (tp.e - tp.s) / 1000, 0);
           if (td <= 0) continue;
-          const ser = realSeries(o.gab);
-          const seen = new Set();
-          for (const sr of ser) { seen.add(sr.guid); (topsAb[sr.guid] = topsAb[sr.guid] || {name: sr.name, v: []}).v.push(mine.reduce((sm, [tp, v]) => sm + v * integ(sr, tp.s, tp.e), 0) / td); }
-          for (const g of Object.keys(topsAb)) if (!seen.has(+g)) topsAb[g].v.push(0);
-          topsAb.__n = (topsAb.__n || 0) + 1;
+          const m = {};
+          for (const sr of realSeries(o.gab)) { m[sr.guid] = mine.reduce((sm, [tp, v]) => sm + v * integ(sr, tp.s, tp.e), 0) / td; names[sr.guid] = sr.name; }
+          perTop.push(m);
         }
-        const nT = topsAb.__n || 0; delete topsAb.__n;
-        const medT = (g) => { const e = topsAb[g]; if (!e || !nT) return null; const v = e.v.concat(Array(Math.max(0, nT - e.v.length)).fill(0)); return med(v); };
+        const nT = perTop.length;
+        const medT = (g) => nT ? med(perTop.map((m) => m[g] || 0)) : null;
         const cand = new Map();
         for (const [g, nm, v] of youAb) cand.set(g, {nm, you: v, tops: medT(g)});
-        for (const g of Object.keys(topsAb)) if (!cand.has(+g)) cand.set(+g, {nm: topsAb[g].name, you: 0, tops: medT(g)});
+        for (const g of Object.keys(names)) if (!cand.has(+g)) cand.set(+g, {nm: names[g], you: 0, tops: medT(g)});
         row.hurt = [...cand.values()].filter((x) => Math.max(x.you, x.tops || 0) > 0).sort((a, b) => Math.max(b.you, b.tops || 0) - Math.max(a.you, a.tops || 0)).slice(0, 4)
           .map((x) => [x.nm, kilo(x.you), kilo(x.tops)]);
         row.hurt_n = nT;
