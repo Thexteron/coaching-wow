@@ -246,6 +246,10 @@ window.CWX = (() => {
     const log = (m) => st.log.push(Math.round((Date.now() - st.t0) / 1000) + ' s · ' + m);
     const us = await fight(spec.code, spec.fight);
     log('clé chargée : ' + us.pulls.length + ' pulls');
+    for (const P of spec.players) {
+      if (!P.source_id) { const f = (us.fp.friendlies || []).find((x) => x.name === P.character && String(x.fights || '').includes('.' + us.fid + '.')); P.source_id = f ? f.id : null; }
+      if (!P.source_id) throw new Error(P.character + ' absent du combat ' + us.fid);
+    }
     const isTank = (p) => !!AM[p.spec];
     const needHeal = spec.players.some((p) => p.metric === 'hps' || isTank(p));
     const [gdd, gheal, gtaken, intsHtml, dHtml] = await Promise.all([
