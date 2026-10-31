@@ -3,7 +3,7 @@
 // Utilisation : CWX.run(spec) ; puis CWX.status() jusqu'à state "done" ; puis CWX.part('pulls') etc.
 window.CWX = (() => {
   'use strict';
-  const VERSION = '1.4';
+  const VERSION = '2.0';
   const LOW = 35, HIGH = 45; // passage sous 35 % de vie, sorti au-dessus de 45 %
 
   // Défensifs majeurs par spé (spec Warcraft Logs) : guid -> [nom français, recharge en s, durée en s].
@@ -11,9 +11,18 @@ window.CWX = (() => {
   const DEF = {
     'Rogue-Assassination': {1966: ['Feinte', 15, 6], 31224: ["Cape d'ombre", 120, 5], 5277: ['Évasion', 120, 10], 185311: ['Fiole cramoisie', 30, 4]},
     'Warrior-Arms': {118038: ["Par le fil de l'épée", 120, 8], 23920: ['Renvoi de sort', 25, 5], 97462: ['Cri de ralliement', 180, 10], 202168: ['Victoire imminente', 25, 0]},
-    'Paladin-Retribution': {642: ['Bouclier divin', 300, 8], 184662: ['Bouclier du vengeur', 90, 10], 498: ['Protection divine', 60, 8], 633: ['Imposition des mains', 600, 0]},
+    'Paladin-Retribution': {642: ['Bouclier divin', 300, 8], 184662: ['Bouclier du vengeur', 90, 10], 403876: ['Protection divine', 60, 8], 633: ['Imposition des mains', 600, 0]},
     'Druid-Guardian': {22812: ['Écorce', 60, 8], 61336: ['Instincts de survie', 180, 6], 22842: ['Régénération frénétique', 36, 3], 200851: ['Rage du dormeur', 90, 8]},
     'Shaman-Restoration': {108271: ['Transfert astral', 120, 12], 198103: ['Élémentaire de terre', 300, 0]},
+  };
+  // Gros CD suivis pull par pull : guid -> [nom, type] ; type 'h' = CD de soin, 'd' = défensif (posé sur un sort ennemi),
+  // 'o' = CD offensif (posé sur une cible).
+  const CDS = {
+    'Shaman-Restoration': {108280: ['Totem de marée de soins', 'h'], 98008: ["Totem de lien d'esprit", 'h'], 114052: ['Ascendance', 'h'], 378081: ['Rapidité de la nature', 'h'], 108271: ['Transfert astral', 'd']},
+    'Rogue-Assassination': {360194: ['Marque létale', 'o'], 31224: ["Cape d'ombre", 'd'], 5277: ['Évasion', 'd']},
+    'Paladin-Retribution': {31884: ['Courroux vengeur', 'o'], 375576: ['Glas divin', 'o'], 343527: ['Condamnation à mort', 'o'], 642: ['Bouclier divin', 'd'], 403876: ['Protection divine', 'd'], 184662: ['Bouclier du vengeur', 'd']},
+    'Warrior-Arms': {107574: ['Avatar', 'o'], 227847: ['Tempête de lames', 'o'], 118038: ["Par le fil de l'épée", 'd'], 97462: ['Cri de ralliement', 'd'], 23920: ['Renvoi de sort', 'd']},
+    'Druid-Guardian': {102558: ["Incarnation : Gardien d'Ursoc", 'o'], 204066: ['Rayon lunaire', 'o'], 61336: ['Instincts de survie', 'd'], 22812: ['Écorce', 'd'], 200851: ['Rage du dormeur', 'd']},
   };
   // Mitigation active des tanks (buff sur le tank).
   const AM = {'Druid-Guardian': 192081, 'Warrior-Protection': 132404, 'Paladin-Protection': 132403, 'DemonHunter-Vengeance': 203819, 'DeathKnight-Blood': 195181, 'Monk-Brewmaster': 215479};
@@ -49,6 +58,9 @@ window.CWX = (() => {
     hp: (code, f, s, e, id) => `/reports/resources-graph/${W(code, f, s, e)}/1000/0/${id}/0/-1.0.-1.-1/0/Any?lang=fr&`,
     deaths: (code, f, s, e) => `/reports/deaths/${W(code, f, s, e)}/0/0/0/-1.0.-1.-1/0/Any/0/${s}?lang=fr&`,
     death: (code, f, s, e, i) => `/reports/deaths-events/${W(code, f, s, e)}/0/0/0/-1.0.-1.-1/0/Any/0/${i}?lang=fr&`,
+    gab: (code, f, s, e) => `/reports/graph/damage-taken/${W(code, f, s, e)}/ability/0/0/0/0/0/0/-1.0.-1.-1/0/Any/Any/0/0?lang=fr&`,
+    gcasts: (code, f, s, e, id) => `/reports/graph/casts/${W(code, f, s, e)}/ability/0/${id}/0/0/0/0/-1.0.-1.-1/0/Any/Any/${id}/0?lang=fr&`,
+    gtg: (code, f, s, e, id) => `/reports/graph/damage-done/${W(code, f, s, e)}/target/0/${id}/0/0/0/0/-1.0.-1.-1/0/Any/Any/0/0?lang=fr&`,
   };
 
   // ---------- outils ----------
@@ -107,6 +119,21 @@ window.CWX = (() => {
     return [...tr.querySelectorAll('.bar-piece')].map((p) => { const l = parseFloat(p.style.left) || 0, w = parseFloat(p.style.width) || 0; return [F.start + l / 100 * D, F.start + (l + w) / 100 * D]; });
   };
   const covered = (bands, a, b) => { let c = 0; for (const [x, y] of bands) { const ov = Math.min(b, y) - Math.max(a, x); if (ov > 0) c += ov; } return c; };
+  // Lancers des gros CD d'un joueur (graphe des casts : horodatages exacts).
+  const castsOf = (gc, table) => {
+    const out = [];
+    for (const sr of ((gc && gc.series) || [])) {
+      const def = table[sr.guid];
+      if (!def) continue;
+      for (const pt of sr.data || []) out.push({id: sr.guid, name: def[0], kind: def[1], t: Array.isArray(pt) ? pt[0] : pt});
+    }
+    return out.sort((a, b) => a.t - b.t);
+  };
+  const realSeries = (g) => ((g && g.series) || []).filter((sr) => sr.name !== 'Total' && sr.guid !== null && sr.guid !== undefined && sr.data && sr.data.length);
+  // Sort ennemi qui fait le plus de dégâts au groupe de 2 s avant à 8 s après t ; cible la plus tapée dans les 10 s qui suivent t.
+  const dominant = (g, a, b) => { let best = null, bv = 0; for (const sr of realSeries(g)) { const v = integ(sr, a, b); if (v > bv) { bv = v; best = sr.name; } } return best; };
+  const onOf = (c, gab, gtg) => c.kind === 'o' ? dominant(gtg, c.t, c.t + 10000) : dominant(gab, c.t - 2000, c.t + 8000);
+  const mode = (arr) => { const m = {}; let best = null; for (const x of arr) { if (!x) continue; m[x] = (m[x] || 0) + 1; if (!best || m[x] > m[best]) best = x; } return best; };
   const dips = (pts) => {
     const out = []; let cur = null;
     for (const [ts, hp] of pts) {
@@ -256,6 +283,7 @@ window.CWX = (() => {
     const [gdd, gheal, gtaken, intsHtml, dHtml] = await Promise.all([
       graph('damage-done', us), needHeal ? graph('healing', us) : null, graph('damage-taken', us),
       text(U.ints(us.code, us.fid, us.start, us.end)), text(U.deaths(us.code, us.fid, us.start, us.end))]);
+    const usGab = await json(U.gab(us.code, us.fid, us.start, us.end));
     const S = us.start;
     const rel = (ts) => (ts - S) / 1000;
     const pullAt = (sec) => { const ts = S + sec * 1000; const p = us.pulls.find((x) => ts >= x.s - 2000 && ts <= x.e + 2000); return p ? p.n : null; };
@@ -283,6 +311,10 @@ window.CWX = (() => {
         const hpS = ((hpj.series || [])[0] || {}).data || [];
         tk = {taken: seriesOf(gtaken, P.source_id), heal: seriesOf(gheal, P.source_id), bands: bandsOf(aur, us, AM[P.spec]), hp: hpS, dips: dips(hpS)};
       }
+      const cdTable = CDS[P.spec] || {};
+      const [gcYou, gtgYou] = await Promise.all([json(U.gcasts(us.code, us.fid, us.start, us.end, P.source_id)), P.metric !== 'hps' ? json(U.gtg(us.code, us.fid, us.start, us.end, P.source_id)) : null]);
+      const castsYou = castsOf(gcYou, cdTable);
+      castsYou.forEach((cst) => { cst.on = onOf(cst, usGab, gtgYou); });
       // tops
       const tops = [];
       await Promise.all((P.tops || []).map(async (T, ti) => {
@@ -290,6 +322,10 @@ window.CWX = (() => {
           const F = await fight(T.code, T.fight);
           const [g, ih] = await Promise.all([graph(kind, F), text(U.ints(F.code, F.fid, F.start, F.end))]);
           const o = {name: T.name, ti, F, s: seriesOf(g, T.source_id), ints: parseInts(ih), asg: assign(us, F)};
+          const [gc, gtg, gab] = await Promise.all([json(U.gcasts(F.code, F.fid, F.start, F.end, T.source_id)), P.metric !== 'hps' ? json(U.gtg(F.code, F.fid, F.start, F.end, T.source_id)) : null, json(U.gab(F.code, F.fid, F.start, F.end))]);
+          o.gab = gab; o.gtg = gtg;
+          o.casts = castsOf(gc, cdTable);
+          o.casts.forEach((cst) => { cst.on = onOf(cst, gab, gtg); });
           if (tank) {
             const [gt, gh, aur, hpj] = await Promise.all([graph('damage-taken', F), graph('healing', F), text(U.auras(F.code, F.fid, F.start, F.end, T.source_id)), json(U.hp(F.code, F.fid, F.start, F.end, T.source_id))]);
             const hpS = ((hpj.series || [])[0] || {}).data || [];
@@ -300,13 +336,15 @@ window.CWX = (() => {
       }));
       tops.sort((a, b) => a.ti - b.ti);
       log(P.character + ' : ' + tops.length + ' tops chargés');
-      charData[P.character] = {P, tops, tk, sYou};
+      charData[P.character] = {P, tops, tk, sYou, castsYou, gtgYou, cdTable};
       for (const o of tops) {
         o.F.pulls.forEach((tp, k) => { if (!o.asg[k].length && !tp.boss) allTopPulls.push({key: o.F.code + '-' + o.F.fid, tp}); });
         if (!traceTops.some((x) => x.F.code === o.F.code && x.F.fid === o.F.fid)) traceTops.push(o);
       }
     }
 
+    const uniqTops = [];
+    for (const D of Object.values(charData)) for (const o of D.tops) if (!uniqTops.some((x) => x.F.code === o.F.code && x.F.fid === o.F.fid)) uniqTops.push(o);
     // lignes pull (une par pull de la clé, avec les chiffres de chaque perso)
     const kicksMissedAt = ints.flatMap((s) => s.missedAt);
     for (let i = 0; i < us.pulls.length; i++) {
@@ -317,6 +355,31 @@ window.CWX = (() => {
       const deaths = dtab.filter((d) => d.t !== null && pullAt(d.t) === p.n).map((d) => d.who);
       const row = {item_id: spec.key_id + '-pull-' + p.n, key_id: spec.key_id, kind: 'pull', n: p.n, boss: !!p.boss, kill: p.kill, label: p.name, t: Math.round(rel(p.s)), e: Math.round(rel(p.e)), x, y, map: p.map,
         forces: r1(p.forces), mobs_n: p.mobN, mobs, deaths: deaths.join(', ') || null, kicks_missed: kicksMissedAt.filter((t) => pullAt(t) === p.n).length, chars: {}, tank: null};
+      // ce qui fait mal au groupe sur ce pull, face aux tops (tous les tops des persos suivis, sans doublon)
+      {
+        const youAb = realSeries(usGab).map((sr) => [sr.guid, sr.name, dur > 0 ? integ(sr, p.s, p.e) / dur : 0]);
+        const topsAb = {};
+        for (const o of uniqTops) {
+          const mine = o.F.pulls.map((tp, k) => [tp, share(o.asg, k, i)]).filter((x) => x[1] > 0);
+          const w = mine.reduce((sm, [, v]) => sm + v, 0);
+          if (w < 0.25 || !o.gab) continue;
+          const td = mine.reduce((sm, [tp, v]) => sm + v * (tp.e - tp.s) / 1000, 0);
+          if (td <= 0) continue;
+          const ser = realSeries(o.gab);
+          const seen = new Set();
+          for (const sr of ser) { seen.add(sr.guid); (topsAb[sr.guid] = topsAb[sr.guid] || {name: sr.name, v: []}).v.push(mine.reduce((sm, [tp, v]) => sm + v * integ(sr, tp.s, tp.e), 0) / td); }
+          for (const g of Object.keys(topsAb)) if (!seen.has(+g)) topsAb[g].v.push(0);
+          topsAb.__n = (topsAb.__n || 0) + 1;
+        }
+        const nT = topsAb.__n || 0; delete topsAb.__n;
+        const medT = (g) => { const e = topsAb[g]; if (!e || !nT) return null; const v = e.v.concat(Array(Math.max(0, nT - e.v.length)).fill(0)); return med(v); };
+        const cand = new Map();
+        for (const [g, nm, v] of youAb) cand.set(g, {nm, you: v, tops: medT(g)});
+        for (const g of Object.keys(topsAb)) if (!cand.has(+g)) cand.set(+g, {nm: topsAb[g].name, you: 0, tops: medT(g)});
+        row.hurt = [...cand.values()].filter((x) => Math.max(x.you, x.tops || 0) > 0).sort((a, b) => Math.max(b.you, b.tops || 0) - Math.max(a.you, a.tops || 0)).slice(0, 4)
+          .map((x) => [x.nm, kilo(x.you), kilo(x.tops)]);
+        row.hurt_n = nT;
+      }
       for (const [c, D] of Object.entries(charData)) {
         const you = dur > 0 ? integ(D.sYou, p.s, p.e) / dur : null;
         const per = [], durs = [], forc = [], mobn = [];
@@ -337,6 +400,43 @@ window.CWX = (() => {
           }
         }
         row.chars[c] = {p: kilo(you), m: kilo(med(per)), lo: kilo(q(per, 0.25)), hi: kilo(q(per, 0.75)), d: r0(med(durs)), f: r1(med(forc)), mn: r0(med(mobn)), k: durs.length, nt: D.tops.length};
+        // gros CD sur ce pull : les tiens (et sur quoi), la part des tops qui les posent ici (et sur quoi, le plus souvent)
+        {
+          const inP = (cst, a, b) => cst.t >= a - 3000 && cst.t <= b;
+          const mineC = D.castsYou.filter((cst) => inP(cst, p.s, p.e));
+          const tUse = {}, tOn = {}; let kk = 0;
+          for (const o of D.tops) {
+            const mine = o.F.pulls.map((tp, k) => [tp, share(o.asg, k, i)]).filter((x) => x[1] > 0);
+            if (mine.reduce((sm, [, v]) => sm + v, 0) < 0.25) continue;
+            kk++;
+            const used = new Set();
+            for (const cst of o.casts || []) if (mine.some(([tp]) => inP(cst, tp.s, tp.e))) { used.add(cst.id); (tOn[cst.id] = tOn[cst.id] || []).push(cst.on); }
+            for (const id of used) tUse[id] = (tUse[id] || 0) + 1;
+          }
+          const cd = [];
+          for (const [id, def] of Object.entries(D.cdTable)) {
+            const yc = mineC.filter((cst) => cst.id === +id);
+            const sh = kk ? (tUse[id] || 0) / kk : 0;
+            if (!yc.length && sh < 0.3) continue;
+            cd.push([def[0], yc.length ? [...new Set(yc.map((cst) => cst.on || '?'))].join(' · ') : null, Math.round(sh * 100), mode(tOn[id] || [])]);
+          }
+          if (cd.length) row.chars[c].cd = cd;
+        }
+        // cibles (DPS et tank) : part de tes dégâts sur chaque monstre, face aux tops
+        if (D.gtgYou) {
+          const shares = (g, wins) => { const by = {}; let tot = 0; for (const sr of realSeries(g)) { const v = wins.reduce((sm, [a, b, w]) => sm + w * integ(sr, a, b), 0); if (v <= 0) continue; by[sr.name] = (by[sr.name] || 0) + v; tot += v; } if (tot > 0) for (const k of Object.keys(by)) by[k] = by[k] / tot * 100; return by; };
+          const ys = shares(D.gtgYou, [[p.s, p.e, 1]]);
+          const ts = [];
+          for (const o of D.tops) {
+            const mine = o.F.pulls.map((tp, k) => [tp, share(o.asg, k, i)]).filter((x) => x[1] > 0);
+            if (!o.gtg || mine.reduce((sm, [, v]) => sm + v, 0) < 0.25) continue;
+            ts.push(shares(o.gtg, mine.map(([tp, v]) => [tp.s, tp.e, v])));
+          }
+          const names = new Set([...Object.keys(ys), ...ts.flatMap((x) => Object.keys(x))]);
+          const tg = [...names].map((nm) => [nm, ys[nm] || 0, ts.length ? med(ts.map((x) => x[nm] || 0)) : null])
+            .sort((a, b) => Math.max(b[1], b[2] || 0) - Math.max(a[1], a[2] || 0)).slice(0, 3).map(([nm, y, t]) => [nm, r0(y), r0(t)]);
+          if (tg.length && tg.some((x) => x[1] > 0 || x[2] > 0)) row.chars[c].tg = tg;
+        }
         if (D.tk) {
           const tt = integ(D.tk.taken, p.s, p.e), th = integ(D.tk.heal, p.s, p.e);
           row.tank = {who: c, tk: kilo(dur > 0 ? tt / dur : null), ttk: kilo(med(tkv.taken)), sh: r0(tt > 0 ? th / tt * 100 : null), tsh: r0(med(tkv.sh)), am: r0(dur > 0 ? covered(D.tk.bands, p.s, p.e) / (dur * 1000) * 100 : null), tam: r0(med(tkv.am)),
@@ -439,6 +539,11 @@ window.CWX = (() => {
         packs_en_plus: extra.map((r) => ({n: r.n, label: r.label})),
         kicks_a_travailler: kicks,
         morts: out.deaths.filter((d) => d.character === c).map((d) => ({t: d.t, killer: d.killer, one_shot: d.one_shot, verdict: d.verdict})),
+        gros_cd: Object.entries(D.cdTable).map(([id, def]) => {
+          const yc = D.castsYou.filter((cst) => cst.id === +id);
+          const tc = D.tops.map((o) => (o.casts || []).filter((cst) => cst.id === +id));
+          return {cd: def[0], toi: yc.length, tops: r1(med(tc.map((x) => x.length))), toi_sur: mode(yc.map((x) => x.on)), tops_sur: mode(tc.flat().map((x) => x.on))};
+        }).filter((x) => x.toi || x.tops),
       };
       if (D.tk) {
         const tr = out.pulls.filter((r) => r.tank && r.chars[c].k >= 3);
