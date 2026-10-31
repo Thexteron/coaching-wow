@@ -3,7 +3,7 @@
 // Utilisation : CWX.run(spec) ; puis CWX.status() jusqu'à state "done" ; puis CWX.part('pulls') etc.
 window.CWX = (() => {
   'use strict';
-  const VERSION = '1.3';
+  const VERSION = '1.4';
   const LOW = 35, HIGH = 45; // passage sous 35 % de vie, sorti au-dessus de 45 %
 
   // Défensifs majeurs par spé (spec Warcraft Logs) : guid -> [nom français, recharge en s, durée en s].
@@ -209,7 +209,8 @@ window.CWX = (() => {
       else if (cool.length) verdict += ` ${cool.join(' et ')} ${pl(cool, 'était en recharge', 'étaient en recharge')}.`;
       verdict += pct >= 100 ? ' Ce coup tue sans défensif : il faut l’éviter ou le prendre sous défensif.' : ' Un défensif ou un soin juste avant suffisait.';
     } else {
-      verdict = `De ${since !== null ? '90 %' : (hp[0] ? hp[0][1] + ' %' : '?')} à 0 en ${since !== null ? String(Math.round(since * 10) / 10).replace('.', ',') : '?'} s, surtout ${hits[0] ? hits[0].spell : kbName}. Soins reçus sur les 5 dernières secondes : ${heals ? fmtK(heals) : 'aucun'}.`;
+      const span = since !== null ? since : (hp[0] ? -hp[0][0] : null);
+      verdict = `De ${since !== null ? '90 %' : (hp[0] ? hp[0][1] + ' %' : '?')} à 0 en ${span !== null ? String(Math.round(span * 10) / 10).replace('.', ',') : '?'} s, surtout ${hits[0] ? hits[0].spell : kbName}. Soins reçus sur les 5 dernières secondes : ${heals ? fmtK(heals) : 'aucun'}.`;
       if (ready.length) verdict += ` ${ready.join(' et ')} ${pl(ready, 'était prêt', 'étaient prêts')}, pas ${pl(ready, 'utilisé', 'utilisés')}.`;
       else if (used.length) verdict += ` ${used.join(' et ')} ${pl(used, 'était actif', 'étaient actifs')}.`;
     }
@@ -455,24 +456,40 @@ window.CWX = (() => {
   };
 
 
-  // Icônes : JPEG 32×32 en base64 (profil ICC retiré), depuis wow.zamimg.com, pour les noms d'icônes donnés.
-  const iconB64 = async (name, px = 32) => {
-    const n = String(name).replace(/\.jpg$/, '');
-    const r = await fetch('https://wow.zamimg.com/images/wow/icons/medium/' + n + '.jpg');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const bmp = await createImageBitmap(await r.blob());
-    const c = document.createElement('canvas'); c.width = c.height = px;
-    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(bmp, 0, 0, px, px);
-    const bin = atob(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
-    const b = Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
-    const keep = [b[0], b[1]]; let i = 2;
-    while (i + 4 <= b.length && b[i] === 0xFF && b[i + 1] !== 0xDA) { const len = (b[i + 2] << 8) | b[i + 3]; if (b[i + 1] !== 0xE2) for (let k = i; k < i + 2 + len; k++) keep.push(b[k]); i += 2 + len; }
-    for (let k = i; k < b.length; k++) keep.push(b[k]);
+  // Icônes : une seule image JPEG (bande de 32 px de haut, une icône de 32 × 32 par nom, dans l'ordre), en base64,
+  // depuis wow.zamimg.com. Le tableau de bord la découpe grâce aux lignes icon_map {icon_name, icon, i, n}.
+  const sprite = async (names, px = 32, q = 0.82) => {
+    const list = [...new Set(names.filter(Boolean))];
+    const ok = [], bmps = [];
+    for (const n of list) {
+      try {
+        const r = await fetch('https://wow.zamimg.com/images/wow/icons/medium/' + String(n).replace(/\.jpg$/, '') + '.jpg');
+        if (!r.ok) continue;
+        bmps.push(await createImageBitmap(await r.blob())); ok.push(n);
+      } catch (e) { /* icône introuvable : ignorée */ }
+    }
+    if (!ok.length) return {names: [], b64: null};
+    const c = document.createElement('canvas'); c.width = px * ok.length; c.height = px;
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+    bmps.forEach((bm, k) => g.drawImage(bm, k * px, 0, px, px));
+    const bin = atob(c.toDataURL('image/jpeg', q).split(',')[1]);
+    const by = Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
+    const keep = [by[0], by[1]]; let i = 2;
+    while (i + 4 <= by.length && by[i] === 0xFF && by[i + 1] !== 0xDA) { const len = (by[i + 2] << 8) | by[i + 3]; if (by[i + 1] !== 0xE2) for (let k = i; k < i + 2 + len; k++) keep.push(by[k]); i += 2 + len; }
+    for (let k = i; k < by.length; k++) keep.push(by[k]);
     let out = ''; for (let k = 0; k < keep.length; k++) out += String.fromCharCode(keep[k]);
-    return btoa(out);
+    return {names: ok, b64: btoa(out)};
   };
-  const icons = async (names) => { const out = {}; for (const n of [...new Set(names.filter(Boolean))]) { try { out[n] = await iconB64(n); } catch (e) { out[n] = null; } } return out; };
-  const iconNames = () => { const o = window.__CWX && window.__CWX.out; if (!o) return []; const s = new Set(); for (const d of o.deaths) { s.add(d.icon_name); d.hits.forEach((h) => s.add(h.icon_name)); d.cds.forEach((c) => s.add(c.icon_name)); } for (const k of o.kicks) s.add(k.icon_name); s.delete(null); s.delete(undefined); return [...s]; };
+  // Noms d'icônes utilisés par la dernière analyse (morts : coup fatal et défensifs ; kicks), sauf ceux déjà connus.
+  const iconNames = (known) => {
+    const o = window.__CWX && window.__CWX.out; if (!o) return [];
+    const s = new Set();
+    for (const d of o.deaths) { s.add(d.icon_name); d.hits.forEach((h) => s.add(h.icon_name)); d.cds.forEach((c) => s.add(c.icon_name)); }
+    for (const k of o.kicks) s.add(k.icon_name);
+    for (const k of known || []) s.delete(k);
+    s.delete(null); s.delete(undefined);
+    return [...s];
+  };
 
   const run = (spec) => {
     const st = {state: 'running', t0: Date.now(), log: [], out: null, err: null, key: spec.key_id};
@@ -482,6 +499,6 @@ window.CWX = (() => {
   };
   const status = () => { const s = window.__CWX; return s ? {key: s.key, state: s.state, secs: Math.round((Date.now() - s.t0) / 1000), log: s.log.slice(-6), err: s.err} : null; };
   const part = (name) => { const s = window.__CWX; if (!s || !s.out) return null; return name ? s.out[name] : Object.fromEntries(Object.entries(s.out).map(([k, v]) => [k, Array.isArray(v) ? v.length : Object.keys(v).length])); };
-  return {VERSION, run, status, part, icons, iconNames, _: {fight, parseInts, parseDeathsTable, assign, DEF, AM}};
+  return {VERSION, run, status, part, sprite, iconNames, _: {fight, parseInts, parseDeathsTable, assign, DEF, AM}};
 })();
 'CWX ' + window.CWX.VERSION + ' prêt';
