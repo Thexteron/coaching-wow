@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Coaching WoW</title><meta name="description" content="Coaching M+ et raid à partir des logs Warcraft Logs"><style>:root{--font-anthropic-sans:system-ui,sans-serif;--font-anthropic-serif:Georgia,serif;--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:16px;--cds-gap-lg:24px;--cds-gap-xl:32px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:20px;--cds-radius:8px;--cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:18px;--cds-font-size-title:28px;--cds-font-weight-medium:600;--color-fg:#1b1b1b;--color-fg-muted:#6b6b6b;--color-panel:#fff;--color-border-line:#e3e3e3;--color-ok:#178a3a;--color-warn:#b86e00;--color-bad:#c53030;--cds-chart-grid:#eee;--cds-chart-axis:#999;--cds-chart-reference:#888;--cds-chart-muted:#aaa;--cds-surface-popover:#fff;--cds-border:#ddd;--cds-shadow-popover:0 2px 8px rgba(0,0,0,.15);--cds-text-secondary:#666;--cds-dur-slow:.3s}body{background:#f6f6f4;margin:16px}</style><meta name="color-scheme" content="dark"><style>:root{color-scheme:dark;--color-fg:#e8e6e3;--color-fg-muted:#a5a29c;--color-panel:#1e2026;--color-border-line:#33363e;--color-ok:#4cc276;--color-warn:#e8a33d;--color-bad:#f0645f;--cds-chart-grid:#2b2e35;--cds-chart-axis:#6f727b;--cds-chart-reference:#8b8e96;--cds-chart-muted:#5f626b;--cds-surface-popover:#262931;--cds-border:#3b3e46;--cds-shadow-popover:0 4px 14px rgba(0,0,0,.55);--cds-text-secondary:#a5a29c}body{background:#15171b;color:var(--color-fg)}a{color:#8ab4f8}a:visited{color:#b49cf5}img.cw-ico{border-radius:3px}</style><script src="d3.min.js"></script><script src="data.js"></script></head><body><script>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Coaching WoW</title><meta name="description" content="Coaching Mythique+ à partir des logs Warcraft Logs"><style>:root{--font-anthropic-sans:system-ui,sans-serif;--font-anthropic-serif:Georgia,serif;--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:16px;--cds-gap-lg:24px;--cds-gap-xl:32px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:20px;--cds-radius:8px;--cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:18px;--cds-font-size-title:28px;--cds-font-weight-medium:600;--color-fg:#1b1b1b;--color-fg-muted:#6b6b6b;--color-panel:#fff;--color-border-line:#e3e3e3;--color-ok:#178a3a;--color-warn:#b86e00;--color-bad:#c53030;--cds-chart-grid:#eee;--cds-chart-axis:#999;--cds-chart-reference:#888;--cds-chart-muted:#aaa;--cds-surface-popover:#fff;--cds-border:#ddd;--cds-shadow-popover:0 2px 8px rgba(0,0,0,.15);--cds-text-secondary:#666;--cds-dur-slow:.3s}body{background:#f6f6f4;margin:16px}</style><meta name="color-scheme" content="dark"><style>:root{color-scheme:dark;--color-fg:#e8e6e3;--color-fg-muted:#a5a29c;--color-panel:#1e2026;--color-border-line:#33363e;--color-ok:#4cc276;--color-warn:#e8a33d;--color-bad:#f0645f;--cds-chart-grid:#2b2e35;--cds-chart-axis:#6f727b;--cds-chart-reference:#8b8e96;--cds-chart-muted:#5f626b;--cds-surface-popover:#262931;--cds-border:#3b3e46;--cds-shadow-popover:0 4px 14px rgba(0,0,0,.55);--cds-text-secondary:#a5a29c}body{background:#15171b;color:var(--color-fg)}a{color:#8ab4f8}a:visited{color:#b49cf5}img.cw-ico{border-radius:3px}</style><script src="d3.min.js"></script><script src="data.js"></script></head><body><script>
 window.dash=(()=>{const DATA=window.__DATA;let params={};const draws={};const ondata=[];const calcs={};
 const api={colors:['#5b9bff','#d97706','#059669','#7c3aed'],
 data:(id)=>calcs[id]?{status:'ok',data:calcs[id].fn(...calcs[id].inputs.map(i=>DATA[i]))}:(DATA[id]?{status:'ok',data:DATA[id]}:{status:'loading'}),
@@ -120,7 +120,99 @@ api._run=run;return api;})();</script>
   .cw-kpi-v { margin: 2px 0 0; font-variant-numeric: tabular-nums; color: var(--color-fg-muted); }
   .cw .cw-kpi-v b { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-heading); color: var(--color-fg); }
   .cw-route-lists { margin-top: var(--cds-gap-sm); }
-  .cw [hidden] { display: none !important; }
+  .cw-tl-sm { min-height: 230px; }
+  .cw-pullgrid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(15rem, 1fr); gap: var(--cds-gap-md); align-items: start; }
+  @media (max-width: 900px) { .cw-pullgrid { grid-template-columns: minmax(0, 1fr); } }
+  .cw-maps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: var(--cds-gap-sm); }
+  .cw-floor { position: relative; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: color-mix(in srgb, var(--color-fg) 3%, var(--color-panel)); overflow: hidden; }
+  .cw-floor-h { position: absolute; top: 6px; left: 10px; margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); pointer-events: none; }
+  .cw-floor svg { display: block; width: 100%; height: auto; max-height: 420px; }
+  .cw-pm { cursor: pointer; outline: none; }
+  .cw-pm text { font-size: 10px; font-weight: 600; fill: var(--color-fg); pointer-events: none; font-variant-numeric: tabular-nums; }
+  .cw-pm:focus-visible circle, .cw-pm:focus-visible path { stroke-width: 3; }
+  .cw-pd { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
+  .cw-pd-h { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .cw-pd-h b { font-weight: var(--cds-font-weight-medium); }
+  .cw-pd p { margin: 0; }
+  .cw-pd-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cw-pd-mobs { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
+  .cw-badge { font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .cw-pd-nav { display: flex; gap: var(--cds-gap-xs); }
+  .cw-pd-nav button { appearance: none; font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); border-radius: var(--cds-radius); padding: 2px 10px; cursor: pointer; }
+  .cw-pd-nav button:disabled { opacity: .4; cursor: default; }
+  .cw-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cds-gap-xs) var(--cds-gap-md); margin: 0; }
+  .cw-stats dt { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cw-stats dd { margin: 0 0 var(--cds-gap-xs); font-variant-numeric: tabular-nums; }
+  .cw-bullet { position: relative; height: 14px; margin: 4px 0 2px; }
+  .cw-bullet .cw-b-track { position: absolute; left: 0; right: 0; top: 6px; height: 2px; background: var(--cds-chart-grid); }
+  .cw-bullet .cw-b-band { position: absolute; top: 2px; height: 10px; border-radius: 3px; background: var(--cds-chart-muted); opacity: .45; }
+  .cw-bullet .cw-b-med { position: absolute; top: 0; width: 2px; height: 14px; background: var(--cds-chart-reference); }
+  .cw-bullet .cw-b-you { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; border: 2px solid var(--color-panel); }
+  .cw-strip { position: relative; margin-top: var(--cds-gap-md); }
+  .cw-strip svg { display: block; overflow: visible; }
+  .cw-strip-note { margin-top: var(--cds-gap-xs); }
+  .cw-dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--cds-gap-md); }
+  .cw-dcard { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+  .cw-dcard-h { display: flex; gap: var(--cds-gap-sm); align-items: flex-start; }
+  .cw-dcard-h b { display: block; font-weight: var(--cds-font-weight-medium); }
+  .cw-dcard p { margin: 0; }
+  .cw-dverdict { border-left: 3px solid var(--color-bad); padding-left: var(--cds-pad-sm); }
+  .cw-oneshot { display: grid; gap: 4px; }
+  .cw-oneshot-bar { position: relative; height: 12px; border-radius: 6px; background: var(--cds-chart-grid); }
+  .cw-oneshot-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--color-bad); }
+  .cw-oneshot-bar u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--color-fg); }
+  .cw-hits { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: var(--cds-font-size-caption); }
+  .cw-hits li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: var(--cds-gap-xs); align-items: center; }
+  .cw-hits .cw-hit-src { color: var(--color-fg-muted); }
+  .cw-hits .cw-hit-amt { font-variant-numeric: tabular-nums; }
+  .cw-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .cw-cdchip { display: inline-flex; align-items: center; gap: 4px; font-size: var(--cds-font-size-caption); border-radius: 999px; padding: 1px 8px 1px 2px; border: 1px solid var(--color-border-line); color: var(--color-fg-muted); white-space: nowrap; }
+  .cw-cdchip.is-noicon { padding-left: 8px; }
+  .cw-cdchip .cw-ico { border-radius: 50%; }
+  .cw-cdchip.is-pret { border-color: var(--color-bad); color: var(--color-bad); }
+  .cw-cdchip.is-actif { border-color: var(--color-ok); color: var(--color-ok); }
+  .cw-cdchip.is-jamais { border-style: dashed; }
+  .cw-kicks { display: grid; }
+  .cw-kicksum { margin: var(--cds-gap-sm) 0 var(--cds-gap-xs); }
+  .cw-kicksum b { font-weight: var(--cds-font-weight-medium); }
+  .cw-kick { display: grid; grid-template-columns: 22px minmax(0, 1fr) minmax(7rem, 13rem) 5.5rem; gap: var(--cds-gap-sm); align-items: center; padding: var(--cds-pad-sm) 0; border-bottom: 1px solid var(--color-border-line); }
+  .cw-kick:last-child { border-bottom: 0; }
+  .cw-kick.is-muted { opacity: .55; }
+  .cw-kick-name { min-width: 0; }
+  .cw-kick-name b { font-weight: var(--cds-font-weight-medium); }
+  .cw-kick-sub { display: block; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cw-kbar { position: relative; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--color-bad) 70%, var(--color-panel)); }
+  .cw-kbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px 0 0 5px; background: var(--color-ok); }
+  .cw-kbar i.is-full { border-radius: 5px; }
+  .cw-kbar u { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--color-fg); }
+  .cw-kick-txt { display: block; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .cw-kick-you { text-align: right; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .cw-kick-you .cw-badge { display: inline-block; margin-top: 3px; }
+  @media (max-width: 560px) {
+    .cw-kick { grid-template-columns: 22px minmax(0, 1fr) 4.5rem; }
+    .cw-kick > .cw-ico { grid-column: 1; grid-row: 1; }
+    .cw-kick > .cw-kick-name { grid-column: 2; grid-row: 1; }
+    .cw-kick > .cw-kick-you { grid-column: 3; grid-row: 1; }
+    .cw-kick > .cw-kick-barcell { grid-column: 2 / 4; grid-row: 2; }
+  }
+  .cw-sw-topband { background: var(--cds-chart-muted); opacity: .5; }
+  .cw-sw-med { width: 14px; height: 0; border-radius: 0; border-top: 2px solid var(--cds-chart-reference); }
+  .cw-sw-taken { background: var(--color-bad) !important; }
+  .cw-sw-heal { background: var(--color-ok) !important; }
+  .cw-sw-am { background: var(--color-ok); opacity: .7; height: 6px; }
+  .cw-sw-low { width: 0; height: 0; border-radius: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid var(--color-bad); }
+  .cw-sw-pull { width: 12px; height: 12px; border: 2px solid var(--cw-c); background: color-mix(in srgb, var(--cw-c) 28%, var(--color-panel)); }
+  .cw-sw-pull.is-plus { border-style: dashed; background: transparent; }
+  .cw-sw-diamond { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); border: 2px solid var(--color-fg-muted); }
+  .cw-sw-trace { width: 14px; height: 0; border-radius: 0; border-top: 2px solid var(--cds-chart-muted); }
+  .is-ok { --cw-c: var(--color-ok); }
+  .is-eq { --cw-c: var(--cds-chart-axis); }
+  .is-warn { --cw-c: var(--color-warn); }
+  .is-bad { --cw-c: var(--color-bad); }
+  .is-plus { --cw-c: var(--cds-chart-reference); }
+  .is-none { --cw-c: var(--cds-chart-muted); }
+  .cw-map-legend { margin-top: var(--cds-gap-sm); }
+  .cw [hidden], .cw .cw-off { display: none !important; }
   [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
   [data-dash-source-state=empty] { color: transparent; }
 </style>
@@ -133,15 +225,12 @@ api._run=run;return api;})();</script>
     </div>
     <div class="cw-tabs" role="tablist" aria-label="Personnages" id="personnages" data-draw="chartabs" data-source="characters">—</div>
     <div class="cw-ctx">
-      <div class="cw-seg" role="tablist" aria-label="Contenu">
-        <button type="button" class="is-on" role="tab" id="mythique" data-content="M+" aria-selected="true">Mythique+</button>
-      </div>
       <p class="cw-charline" data-draw="charline" data-source="characters">—</p>
     </div>
     <nav class="cw-pages cw-when-report" role="tablist" aria-label="Pages">
       <button type="button" class="cw-page-tab is-on" role="tab" id="onglet-rapport" data-page="rapport" aria-selected="true">Rapport</button>
       <button type="button" class="cw-page-tab" role="tab" id="onglet-indicateurs" data-page="indicateurs" aria-selected="false">Indicateurs</button>
-      <button type="button" class="cw-page-tab" role="tab" id="onglet-loupe" data-page="loupe" aria-selected="false"><span class="cw-mplus-only">Clé à la loupe</span><span class="cw-raid-only" hidden>Combat à la loupe</span></button>
+      <button type="button" class="cw-page-tab" role="tab" id="onglet-loupe" data-page="loupe" aria-selected="false">Clé à la loupe</button>
       <button type="button" class="cw-page-tab" role="tab" id="onglet-historique" data-page="historique" aria-selected="false">Historique</button>
     </nav>
   </header>
@@ -149,7 +238,6 @@ api._run=run;return api;})();</script>
   <section class="cw-card cw-empty cw-when-empty" id="vide" hidden>
     <h2>Pas encore de rapport ici</h2>
     <p class="cw-empty-mplus">Le premier rapport Mythique+ de ce personnage arrivera le soir de sa prochaine clé loggée sur Warcraft Logs.</p>
-    <p class="cw-empty-raid">Le premier rapport de raid arrivera le mercredi qui suit un raid loggé sur Warcraft Logs.</p>
   </section>
 
   <section class="cw-page" id="rapport" data-page-of="rapport">
@@ -198,7 +286,6 @@ api._run=run;return api;})();</script>
     <div class="cw-md">
       <aside class="cw-runs" aria-label="Passages analysés">
         <p class="cw-sub-h cw-mplus-only">Clés analysées</p>
-        <p class="cw-sub-h cw-raid-only" hidden>Combats analysés</p>
         <div class="cw-runlist" data-draw="runlist" data-source="runs"></div>
       </aside>
       <div class="cw-detail">
@@ -207,9 +294,11 @@ api._run=run;return api;})();</script>
           <p class="cw-note" data-draw="runsub" data-source="runs characters">—</p>
         </div>
         <div class="cw-inner" role="tablist" aria-label="Vue">
-          <button type="button" role="tab" class="is-on" id="vue-courbe" data-pane="courbe" aria-selected="true">Courbe des CD</button>
+          <button type="button" role="tab" class="is-on" id="vue-courbe" data-pane="courbe" aria-selected="true">Courbes</button>
+          <button type="button" role="tab" id="vue-pulls" data-pane="pulls" aria-selected="false">Pulls</button>
+          <button type="button" role="tab" id="vue-morts" data-pane="morts" aria-selected="false">Morts et kicks</button>
           <button type="button" role="tab" id="vue-fiche" data-pane="fiche" aria-selected="false">Fiche</button>
-          <button type="button" role="tab" class="cw-mplus-only" id="vue-route" data-pane="route" aria-selected="false">Route</button>
+          <button type="button" role="tab" id="vue-route" data-pane="route" aria-selected="false">Route</button>
           <button type="button" role="tab" id="vue-joueurs" data-pane="joueurs" aria-selected="false">Joueurs comparés</button>
         </div>
 
@@ -217,7 +306,7 @@ api._run=run;return api;})();</script>
           <div class="cw-card">
             <h3><span class="cw-heal">Tes gros CD face aux pics de dégâts</span><span class="cw-dps" hidden>Tes défensifs face aux pics de dégâts</span></h3>
             <p class="cw-note cw-heal">La courbe montre les dégâts subis par tout le groupe, par seconde. Un gros CD (Totem de marée de soins, Totem de lien d'esprit, Ascendance) compte « dans un pic » quand les dégâts du groupe, de 2 s avant à 8 s après, sont parmi les 30 % les plus forts du combat. Survole la courbe pour voir les sorts lancés à ce moment.</p>
-            <p class="cw-note cw-dps" hidden>La courbe montre les dégâts subis par tout le groupe, par seconde. Un défensif (Feinte, Cape d'ombre, Évasion) compte « dans un pic » quand les dégâts du groupe, de 2 s avant à 8 s après, sont parmi les 30 % les plus forts du combat. Les petites icônes sont Marque létale, ton bijou, tes potions et Fiole cramoisie. Survole la courbe pour voir les sorts lancés à ce moment.</p>
+            <p class="cw-note cw-dps" hidden>La courbe montre les dégâts subis par tout le groupe, par seconde. Un défensif majeur (<span data-draw="defnames" data-source="cd_events runs">Feinte, Cape d'ombre, Évasion</span>) compte « dans un pic » quand les dégâts du groupe, de 2 s avant à 8 s après, sont parmi les 30 % les plus forts du combat. Les petites icônes sont tes CD offensifs, ton bijou, tes potions et tes soins perso. Survole la courbe pour voir les sorts lancés à ce moment.</p>
             <ul class="cw-legend">
               <li><span class="cw-sw cw-sw-series"></span>Dégâts subis par le groupe</li>
               <li><span class="cw-sw cw-sw-ring cw-sw-ring-ok"></span><span class="cw-heal">Gros CD dans un pic</span><span class="cw-dps" hidden>Défensif dans un pic</span></li>
@@ -230,10 +319,70 @@ api._run=run;return api;})();</script>
             <p class="cw-note"><span class="cw-heal">Gros CD dans un pic</span><span class="cw-dps" hidden>Défensifs dans un pic</span> sur ce passage : <b data-draw="cdyou" data-source="comparisons">—</b> pour toi, <b data-draw="cdtops" data-source="groups">—</b> chez les tops comparés.</p>
             <div class="cw-tl" id="timeline-toi" data-draw="tlme" data-source="timeline cd_events route_items comparisons"></div>
           </div>
-          <div class="cw-card cw-raid-only" id="timeline-top" hidden>
-            <h3>Un top sur le même boss : <span data-draw="topname" data-source="groups">—</span></h3>
-            <p class="cw-note">Même lecture que ta courbe : regarde où il pose ses <span class="cw-heal">gros CD</span><span class="cw-dps" hidden>défensifs</span> par rapport aux pics.</p>
-            <div class="cw-tl" data-draw="tltop" data-source="timeline cd_events groups comparisons"></div>
+          <div class="cw-card">
+            <h3><span class="cw-heal">Tes soins face aux tops, sur ta route</span><span class="cw-dps" hidden>Tes dégâts face aux tops, sur ta route</span></h3>
+            <p class="cw-note">Ta courbe (<span class="cw-heal">soins</span><span class="cw-dps" hidden>dégâts</span> par seconde, par tranches de 10 s) face à ce que font les tops comparés sur les mêmes monstres. Pour chaque pull, la bande grise va du 1er au 3e quart des tops et le trait marque leur médiane : ils sont recalés sur tes pulls, même s'ils ont pris les packs autrement. Survole pour lire les chiffres.</p>
+            <ul class="cw-legend">
+              <li><span class="cw-sw cw-sw-series"></span>Toi</li>
+              <li><span class="cw-sw cw-sw-band cw-sw-topband"></span>Tops, du 1er au 3e quart</li>
+              <li><span class="cw-sw cw-sw-med"></span>Médiane des tops</li>
+            </ul>
+            <div class="cw-tl cw-tl-sm" data-draw="perfcurve" data-source="timeline pull_items runs characters"></div>
+            <p class="cw-note cw-noperf" hidden>Pas encore calculé pour cette clé : la comparaison pull par pull arrive avec les prochaines analyses.</p>
+          </div>
+          <div class="cw-card cw-tank-only" hidden>
+            <h3>Toi, le tank : dégâts subis, auto-soins et mitigation active</h3>
+            <p class="cw-note">Dégâts que tu prends et soins que tu te fais, par seconde. La bande sous la courbe montre ta mitigation active (Ferpoil) pendant les pulls : verte quand elle tient, orange ou rouge quand elle tombe. Les triangles rouges marquent les passages sous 35 % de vie, les icônes tes défensifs.</p>
+            <ul class="cw-legend">
+              <li><span class="cw-sw cw-sw-series cw-sw-taken"></span>Dégâts subis</li>
+              <li><span class="cw-sw cw-sw-series cw-sw-heal"></span>Soins sur toi-même</li>
+              <li><span class="cw-sw cw-sw-band cw-sw-am"></span>Ferpoil en place</li>
+              <li><span class="cw-sw cw-sw-low"></span>Sous 35 % de vie</li>
+            </ul>
+            <div class="cw-tl" data-draw="tankcurve" data-source="timeline cd_events pull_items runs characters icon_map"></div>
+            <p class="cw-note cw-notank" hidden>Pas encore calculé pour cette clé.</p>
+          </div>
+        </div>
+
+        <div class="cw-pane" id="pulls" data-pane-of="pulls" hidden>
+          <div class="cw-card">
+            <h3>Pull par pull face aux tops</h3>
+            <p class="cw-note">Chaque pull est comparé à ce que les tops comparés ont fait sur les mêmes monstres, même s'ils les ont pris en plusieurs fois ou avec d'autres packs : temps passé et <span class="cw-heal">soins</span><span class="cw-dps" hidden>dégâts</span> par seconde, en médiane. Sur le trash, leur temps est ramené à tes forces ennemies quand ils en ont pris plus ou moins que toi. Clique un pull sur la carte ou sur la bande pour son détail.</p>
+            <div class="cw-kpis" data-draw="pullkpis" data-source="pull_items runs characters"></div>
+            <div class="cw-pullgrid cw-has-pulls">
+              <div>
+                <div class="cw-maps" data-draw="pullmap" data-source="pull_items runs characters"></div>
+                <ul class="cw-legend cw-map-legend">
+                  <li><span class="cw-sw cw-sw-pull is-ok"></span>Plus rapide que les tops</li>
+                  <li><span class="cw-sw cw-sw-pull is-eq"></span>Comme eux (±10 %)</li>
+                  <li><span class="cw-sw cw-sw-pull is-warn"></span>Plus lent</li>
+                  <li><span class="cw-sw cw-sw-pull is-bad"></span>Bien plus lent (+30 %)</li>
+                  <li><span class="cw-sw cw-sw-pull is-plus"></span>Pack que les tops ne font pas</li>
+                  <li><span class="cw-sw cw-sw-diamond"></span>Boss</li>
+                  <li><span class="cw-sw cw-sw-trace"></span>Routes des tops</li>
+                </ul>
+              </div>
+              <div class="cw-pd" data-draw="pulldetail" data-source="pull_items runs characters death_items"></div>
+            </div>
+            <div class="cw-strip cw-has-pulls" data-draw="pullstrip" data-source="pull_items runs characters"></div>
+            <p class="cw-note cw-nopulls" hidden>Pas encore calculé pour cette clé : le pull par pull arrive avec les prochaines analyses (les clés les plus récentes d'abord).</p>
+          </div>
+        </div>
+
+        <div class="cw-pane" id="morts" data-pane-of="morts" hidden>
+          <div class="cw-card">
+            <h3>Tes morts, une par une</h3>
+            <p class="cw-note">Les dernières secondes avant chaque mort : ta vie, les coups qui t'ont tué, les soins reçus et l'état de tes défensifs à ce moment-là.</p>
+            <div class="cw-dgrid" data-draw="deathcards" data-source="death_items pull_items runs icon_map"></div>
+            <p class="cw-note cw-nodeath2" hidden>Aucune mort sur cette clé.</p>
+            <p class="cw-note cw-nodeathdata" hidden>Le récap des morts arrive avec les prochaines analyses pour cette clé.</p>
+          </div>
+          <div class="cw-card">
+            <h3>Interruptions, sort par sort</h3>
+            <p class="cw-note">Pour chaque sort ennemi qui se coupe (interruption, étourdissement, etc.) : la part des lancers que ton groupe a coupés, en vert, et la médiane des tops comparés, le trait. Les sorts à travailler sont en premier ; ceux que les tops ne coupent pas non plus, ou qu'ils ne croisent pas, sont grisés et ne comptent pas dans le total.</p>
+            <p class="cw-kicksum" data-draw="kicksum" data-source="kick_items runs characters"></p>
+            <div class="cw-kicks" data-draw="kickboard" data-source="kick_items runs characters icon_map"></div>
+            <p class="cw-note cw-nokicks" hidden>Le détail des interruptions arrive avec les prochaines analyses pour cette clé.</p>
           </div>
         </div>
 
@@ -332,7 +481,6 @@ api._run=run;return api;})();</script>
   <section class="cw-page" id="historique" data-page-of="historique" hidden>
     <div class="cw-card cw-tablewrap">
       <h3 class="cw-mplus-only">Clés analysées</h3>
-      <h3 class="cw-raid-only" hidden>Combats analysés</h3>
       <table class="cw-table" id="table-cles" data-source="runs" data-row-key="run_id">
         <thead>
           <tr>
@@ -363,7 +511,7 @@ api._run=run;return api;})();</script>
     </div>
   </section>
 
-  <p class="cw-note">Analyses tirées des logs publics Warcraft Logs, mises à jour le <span id="cw-maj">—</span>. Chaque clé et chaque boss sont comparés aux meilleurs joueurs de la même spé du top 100 (10 par clé ou par boss depuis le 30/10), sans buff externe.</p>
+  <p class="cw-note">Analyses tirées des logs publics Warcraft Logs, mises à jour le <span id="cw-maj">—</span>. Chaque clé est comparée aux meilleurs joueurs de la même spé du top 100 (10 par clé depuis le 30/10), sans buff externe.</p>
 </div>
 
 <script>
@@ -546,7 +694,7 @@ api._run=run;return api;})();</script>
 
 <script>
   const PAGES = ['rapport', 'indicateurs', 'loupe', 'historique'];
-  const PANES = ['courbe', 'fiche', 'route', 'joueurs'];
+  const PANES = ['courbe', 'pulls', 'morts', 'fiche', 'route', 'joueurs'];
   document.querySelectorAll('.cw-seg button').forEach((b) => {
     b.addEventListener('click', () => { dash.setParams({content: b.dataset.content}); dash.setLink(b.id); });
   });
@@ -557,7 +705,6 @@ api._run=run;return api;})();</script>
     b.addEventListener('click', () => { dash.setParams({pane: b.dataset.pane}); dash.setLink(b.id); });
   });
   const hash = location.hash.slice(1);
-  if (hash === 'raid') dash.setParams({content: 'Raid'});
   if (PAGES.includes(hash)) dash.setParams({page: hash});
   if (hash.startsWith('vue-') && PANES.includes(hash.slice(4))) dash.setParams({page: 'loupe', pane: hash.slice(4)});
 
@@ -581,11 +728,10 @@ api._run=run;return api;})();</script>
     document.querySelectorAll('.cw-heal').forEach((el) => { el.hidden = !heal; });
     document.querySelectorAll('.cw-dps').forEach((el) => { el.hidden = heal; });
     document.querySelectorAll('.cw-mplus-only').forEach((el) => { el.hidden = s.content !== 'M+'; });
-    document.querySelectorAll('.cw-raid-only').forEach((el) => { el.hidden = s.content !== 'Raid'; });
+    document.querySelectorAll('.cw-tank-only').forEach((el) => { el.hidden = !(window.cwx && window.cwx.tank()); });
     document.querySelectorAll('.cw-when-report').forEach((el) => { el.hidden = empty; });
     document.querySelectorAll('.cw-when-empty').forEach((el) => { el.hidden = !empty; });
     document.querySelectorAll('.cw-empty-mplus').forEach((el) => { el.hidden = s.content !== 'M+'; });
-    document.querySelectorAll('.cw-empty-raid').forEach((el) => { el.hidden = s.content !== 'Raid'; });
     document.querySelectorAll('[data-page-of]').forEach((el) => { el.hidden = empty || el.dataset.pageOf !== page; });
     document.querySelectorAll('[data-pane-of]').forEach((el) => { el.hidden = el.dataset.paneOf !== pane; });
     document.querySelectorAll('.cw-sw-series').forEach((el) => { el.style.background = dash.colors[0]; });
@@ -856,15 +1002,6 @@ api._run=run;return api;})();</script>
     cw.timeline(el, tl.filter((p) => p.run_id === run.run_id), ev.filter((e) => e.run_id === run.run_id), bands);
   });
 
-  dash.draw('tltop', (el) => {
-    const g = cw.groupRow(cw.groupOf(cw.pickRun(cw.state())));
-    const tl = cw.rowsOf('timeline');
-    const ev = cw.rowsOf('cd_events');
-    if (!g || !g.top_timeline || !tl || !ev) { el.replaceChildren(); return; }
-    const mine = (r) => r.group_id === g.group_id && !r.run_id && r.who === g.top_timeline;
-    cw.timeline(el, tl.filter(mine), ev.filter(mine));
-  });
-
   const itemsOf = (source, kind) => {
     const rows = cw.rowsOf(source);
     const gid = cw.groupOf(cw.pickRun(cw.state()));
@@ -1033,6 +1170,665 @@ api._run=run;return api;})();</script>
         cw.linkTd(cw.safeUrl(r.report_url), 'Ouvrir'),
       );
       return tr;
+    }));
+  });
+</script>
+
+<script>
+  // Vues « Pulls », « Morts et kicks », courbe face aux tops et courbe du tank.
+  // Données : pull_items (pulls, cartes, routes des tops), death_items, kick_items, icon_map, et les champs perf / self_k / heal_k / am / hp_min de timeline.
+  window.cwx = (() => {
+    const keyOf = (run) => { const m = run && /reports\/(\w+)\?fight=(\d+)/.exec(run.report_url || ''); return m ? m[1] + '-' + m[2] : null; };
+    const me = () => { const s = cw.state(); return s.chars.find((c) => c.character === s.character) || null; };
+    const tank = () => { const c = me(); return !!c && /tank/i.test(c.role || ''); };
+    const unit = () => { const c = me(); return c && c.rank_metric !== 'dps' ? 'HPS' : 'DPS'; };
+    const icons = () => { const m = new Map(); for (const r of cw.rowsOf('icon_map') || []) if (r.icon_name) m.set(r.icon_name, r.icon); return m; };
+    const ico = (name, size, map) => {
+      const img = document.createElement('img');
+      img.className = 'cw-ico';
+      img.width = size;
+      img.height = size;
+      img.alt = '';
+      const src = name ? (map || icons()).get(name) : null;
+      if (src && /^(\/_blob\/|icons\/)/.test(src)) img.src = src;
+      else if (name && /^[a-z0-9_-]+(\.jpg)?$/i.test(name)) {
+        // icône hors de la bibliothèque du tableau de bord : servie par Wowhead, masquée si elle ne charge pas
+        img.referrerPolicy = 'no-referrer';
+        img.addEventListener('error', () => { img.style.visibility = 'hidden'; });
+        img.src = 'https://wow.zamimg.com/images/wow/icons/medium/' + name.replace(/\.jpg$/i, '').toLowerCase() + '.jpg';
+      } else img.style.visibility = 'hidden';
+      return img;
+    };
+    const keyRows = (source, run) => { const k = keyOf(run); const rows = cw.rowsOf(source); return rows && k ? rows.filter((r) => r.key_id === k) : null; };
+    const pulls = (run) => { const r = keyRows('pull_items', run); return r ? r.filter((x) => x.kind === 'pull').sort((a, b) => a.n - b.n) : null; };
+    const statOf = (p, c) => (p && p.chars && p.chars[c]) || null;
+    // Temps des tops ramené à tes forces ennemies sur un pull de trash (ils ont parfois pris plus ou moins de monstres).
+    const scaled = (p, x) => !!x && !p.boss && +x.f > 0 && +p.forces > 0 && Math.abs(p.forces / x.f - 1) >= 0.05;
+    const adj = (p, x) => { if (!x || !x.d) return null; if (!scaled(p, x)) return x.d; return x.d * Math.max(0.5, Math.min(2, p.forces / x.f)); };
+    const cls = (p, c) => {
+      const x = statOf(p, c);
+      if (!x) return 'none';
+      if (!p.boss && x.k < Math.max(2, Math.ceil(x.nt / 3))) return 'plus';
+      const d = adj(p, x);
+      if (!d) return 'none';
+      const rel = ((p.e - p.t) - d) / d;
+      return rel <= -0.1 ? 'ok' : rel < 0.1 ? 'eq' : rel < 0.3 ? 'warn' : 'bad';
+    };
+    const COL = {ok: 'var(--color-ok)', eq: 'var(--cds-chart-axis)', warn: 'var(--color-warn)', bad: 'var(--color-bad)', plus: 'var(--cds-chart-reference)', none: 'var(--cds-chart-muted)'};
+    const tint = (c, pct) => 'color-mix(in srgb, ' + c + ' ' + pct + '%, var(--color-panel))';
+    const signedT = (d) => (d === null || d === undefined || !isFinite(d)) ? '—' : (d > 0 ? '+' : d < 0 ? '−' : '±') + cw.mmss(Math.abs(d));
+    const kfmt = (v) => (v === null || v === undefined || v === '' || !isFinite(+v)) ? '—' : (+v >= 1000 ? cw.fmt(+v / 1000, 2) + ' M' : cw.fmt(+v, 0) + ' k');
+    const selected = (ps, c) => {
+      const want = +dash.params().pull;
+      const hit = ps.find((p) => p.n === want);
+      if (hit) return hit;
+      let best = ps[0], bd = -1e9;
+      for (const p of ps) {
+        const x = statOf(p, c);
+        if (!x || !x.d || cls(p, c) === 'plus') continue;
+        const d = (p.e - p.t) - adj(p, x);
+        if (d > bd) { bd = d; best = p; }
+      }
+      return best;
+    };
+    const pick = (n) => dash.setParams({pull: String(n)});
+    const tip = (host) => {
+      let t = host.querySelector(':scope > .cw-tip');
+      if (!t) { t = document.createElement('div'); t.className = 'cw-tip'; t.hidden = true; host.append(t); }
+      return t;
+    };
+    const showTip = (host, t, lines, cx, cy) => {
+      t.replaceChildren(...lines.filter(Boolean).map((l, i) => { const d = document.createElement('div'); if (i === 0) d.className = 'cw-tip-h'; d.textContent = l; return d; }));
+      t.hidden = false;
+      const box = host.getBoundingClientRect();
+      const tw = t.offsetWidth, th = t.offsetHeight;
+      t.style.left = Math.max(4, Math.min(box.width - tw - 4, cx - box.left - tw / 2)) + 'px';
+      t.style.top = Math.max(0, cy - box.top - th - 10) + 'px';
+    };
+    const axisText = (sel) => sel.style('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    const pullLines = (p, c) => {
+      const x = statOf(p, c) || {};
+      const k = cls(p, c);
+      const out = ['Pull ' + p.n + ' · ' + p.label];
+      if (k === 'plus') out.push('Toi : ' + cw.mmss(p.e - p.t) + ' · pack que les tops ne font pas');
+      else if (x.d) out.push('Toi : ' + cw.mmss(p.e - p.t) + ' · tops : ' + cw.mmss(adj(p, x)) + (scaled(p, x) ? ' à tes forces' : '') + ' (' + signedT((p.e - p.t) - adj(p, x)) + ')');
+      if (x.p !== undefined && x.p !== null) out.push(unit() + ' : ' + kfmt(x.p) + (k !== 'plus' && x.m ? ' · tops : ' + kfmt(x.m) : ''));
+      return out;
+    };
+    return {keyOf, me, tank, unit, icons, ico, keyRows, pulls, statOf, scaled, adj, cls, COL, tint, signedT, kfmt, selected, pick, tip, showTip, axisText, pullLines};
+  })();
+
+  dash.draw('defnames', (el) => {
+    const s = cw.state();
+    const ev = cw.rowsOf('cd_events') || [];
+    const names = [...new Set(ev.filter((e) => e.character === s.character && e.kind === 'gros' && e.spell).map((e) => e.spell))];
+    el.textContent = names.length ? names.slice(0, 4).join(', ') : 'tes défensifs de spé';
+  });
+
+  // ---------- Courbe : toi face aux tops, recalés sur tes pulls ----------
+  dash.draw('perfcurve', (el) => {
+    const s = cw.state();
+    const c = s.character;
+    const run = cw.pickRun(s);
+    const card = el.closest('.cw-card');
+    const note = card && card.querySelector('.cw-noperf');
+    const tl = cw.rowsOf('timeline');
+    const ps = cwx.pulls(run);
+    const pts = (tl && run) ? tl.filter((p) => p.run_id === run.run_id && p.perf !== undefined && p.perf !== null && p.perf !== '').sort((a, b) => a.t - b.t) : [];
+    const ok = pts.length > 1 && !!ps && ps.length > 0;
+    if (note) note.hidden = ok;
+    el.classList.toggle('cw-off', !ok);
+    if (!ok) { el.replaceChildren(); return; }
+    const W = Math.max(280, el.clientWidth || 640), H = 230, top = 22, bottom = 22, ml = 46, mr = 12;
+    const step = pts[1].t - pts[0].t;
+    const tmax = Math.max(d3.max(pts, (p) => p.t) + step, d3.max(ps, (p) => p.e));
+    const ymax = Math.max(d3.max(pts, (p) => +p.perf) || 1, d3.max(ps, (p) => +((cwx.statOf(p, c) || {}).hi) || 0)) * 1.08;
+    const y = d3.scaleLinear([0, ymax], [H - bottom, top]).nice(3);
+    const x = d3.scaleLinear([0, tmax], [ml, W - mr]);
+    const svg = d3.create('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+    const ticks = y.ticks(3);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', ml).attr('x2', W - mr).attr('y1', (v) => y(v)).attr('y2', (v) => y(v)).style('stroke', 'var(--cds-chart-grid)');
+    cwx.axisText(svg.append('g').selectAll('text').data(ticks).join('text').attr('x', ml - 6).attr('y', (v) => y(v)).attr('dy', '0.32em').attr('text-anchor', 'end')).text((v) => (v === 0 ? '0' : cwx.kfmt(v)));
+    const nT = Math.max(2, Math.min(8, Math.floor((W - ml - mr) / 70)));
+    cwx.axisText(svg.append('g').selectAll('text').data(x.ticks(nT).filter((t) => t >= 0 && t <= tmax)).join('text').attr('x', (t) => x(t)).attr('y', H - 4).attr('text-anchor', 'middle')).text((t) => cw.mmss(t));
+    const g = svg.append('g');
+    for (const p of ps) {
+      const x0 = x(p.t), x1 = x(p.e), st = cwx.statOf(p, c);
+      if (p.boss) g.append('rect').attr('x', x0).attr('width', Math.max(1, x1 - x0)).attr('y', top).attr('height', H - bottom - top).style('fill', 'var(--cds-chart-grid)').style('opacity', 0.55);
+      if (st && st.k && st.lo !== null && st.hi !== null && cwx.cls(p, c) !== 'plus') {
+        g.append('rect').attr('x', x0).attr('width', Math.max(1, x1 - x0)).attr('y', y(st.hi)).attr('height', Math.max(1.5, y(st.lo) - y(st.hi))).style('fill', 'var(--cds-chart-muted)').style('opacity', 0.4);
+        g.append('line').attr('x1', x0).attr('x2', x1).attr('y1', y(st.m)).attr('y2', y(st.m)).style('stroke', 'var(--cds-chart-reference)').style('stroke-width', 2);
+      }
+      if (x1 - x0 >= 12) g.append('text').attr('x', (x0 + x1) / 2).attr('y', top - 8).attr('text-anchor', 'middle').style('fill', p.boss ? 'var(--color-fg)' : 'var(--color-fg-muted)').style('font-size', '10px').style('font-weight', p.boss ? 600 : 400).text(p.n);
+    }
+    const line = pts.map((p) => ({t: p.t + step / 2, v: +p.perf}));
+    svg.append('path').datum(line).attr('d', d3.line((p) => x(p.t), (p) => y(p.v)).curve(d3.curveMonotoneX))
+      .style('fill', 'none').style('stroke', dash.colors[0]).style('stroke-width', 2).style('stroke-linejoin', 'round');
+    const rule = svg.append('line').attr('y1', top).attr('y2', H - bottom).style('stroke', 'var(--cds-chart-axis)').attr('visibility', 'hidden');
+    el.replaceChildren(svg.node());
+    const tp = cwx.tip(el);
+    const bis = d3.bisector((p) => p.t).center;
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml - mr).attr('height', H).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [mx] = d3.pointer(ev);
+        const tt = x.invert(mx);
+        const p = line[Math.max(0, Math.min(line.length - 1, bis(line, tt)))];
+        const pull = ps.find((q) => tt >= q.t && tt <= q.e);
+        const st = pull && cwx.statOf(pull, c);
+        rule.attr('x1', x(tt)).attr('x2', x(tt)).attr('visibility', 'visible');
+        const lines = [cw.mmss(tt) + (pull ? ' · pull ' + pull.n + ' : ' + pull.label : ' · entre deux pulls'), 'Toi : ' + cwx.kfmt(p.v) + ' ' + cwx.unit()];
+        if (pull) lines.push(st && st.k && cwx.cls(pull, c) !== 'plus' ? 'Tops sur ce pull : ' + cwx.kfmt(st.m) + ' (de ' + cwx.kfmt(st.lo) + ' à ' + cwx.kfmt(st.hi) + ')' : 'Pack que les tops ne font pas');
+        const r = svg.node().getBoundingClientRect();
+        cwx.showTip(el, tp, lines, r.left + x(tt) * r.width / W, r.top + top * r.height / H);
+      })
+      .on('pointerleave', () => { tp.hidden = true; rule.attr('visibility', 'hidden'); });
+  });
+
+  // ---------- Courbe du tank ----------
+  dash.draw('tankcurve', (el) => {
+    const s = cw.state();
+    const run = cw.pickRun(s);
+    const card = el.closest('.cw-card');
+    const note = card && card.querySelector('.cw-notank');
+    const tl = cw.rowsOf('timeline');
+    const isT = cwx.tank();
+    const has = (v) => v !== undefined && v !== null && v !== '';
+    const pts = (tl && run && isT) ? tl.filter((p) => p.run_id === run.run_id && has(p.self_k)).sort((a, b) => a.t - b.t) : [];
+    const ok = pts.length > 1;
+    if (note) note.hidden = ok || !isT;
+    el.classList.toggle('cw-off', !ok);
+    if (!ok) { el.replaceChildren(); return; }
+    const ps = cwx.pulls(run) || [];
+    const evs = (cw.rowsOf('cd_events') || []).filter((e) => e.run_id === run.run_id && (e.kind === 'gros' || e.kind === 'vie' || e.kind === 'mort')).sort((a, b) => a.t - b.t);
+    const W = Math.max(280, el.clientWidth || 640), ICO = 18, top = ICO + 14, amH = 8, ml = 46, mr = 12;
+    const plotH = 180, bottom = 22 + amH + 10, H = top + plotH + bottom;
+    const step = pts[1].t - pts[0].t;
+    const tmax = d3.max(pts, (p) => p.t) + step;
+    const ymax = (d3.max(pts, (p) => Math.max(+p.self_k || 0, +p.heal_k || 0)) || 1) * 1.08;
+    const y = d3.scaleLinear([0, ymax], [top + plotH, top]).nice(3);
+    const x = d3.scaleLinear([0, tmax], [ml, W - mr]);
+    const svg = d3.create('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+    const ticks = y.ticks(3);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', ml).attr('x2', W - mr).attr('y1', (v) => y(v)).attr('y2', (v) => y(v)).style('stroke', 'var(--cds-chart-grid)');
+    cwx.axisText(svg.append('g').selectAll('text').data(ticks).join('text').attr('x', ml - 6).attr('y', (v) => y(v)).attr('dy', '0.32em').attr('text-anchor', 'end')).text((v) => (v === 0 ? '0' : cwx.kfmt(v)));
+    const nT = Math.max(2, Math.min(8, Math.floor((W - ml - mr) / 70)));
+    cwx.axisText(svg.append('g').selectAll('text').data(x.ticks(nT).filter((t) => t >= 0 && t <= tmax)).join('text').attr('x', (t) => x(t)).attr('y', H - 4).attr('text-anchor', 'middle')).text((t) => cw.mmss(t));
+    for (const p of ps.filter((q) => q.boss)) svg.append('rect').attr('x', x(p.t)).attr('width', Math.max(1, x(p.e) - x(p.t))).attr('y', top).attr('height', plotH).style('fill', 'var(--cds-chart-grid)').style('opacity', 0.55);
+    const inPull = (t) => ps.some((p) => t + step / 2 >= p.t && t + step / 2 <= p.e);
+    // bande de mitigation active
+    const amY = top + plotH + 8;
+    cwx.axisText(svg.append('text').attr('x', ml - 6).attr('y', amY + amH / 2).attr('dy', '0.32em').attr('text-anchor', 'end').style('font-size', '10px')).text('Ferpoil');
+    svg.append('rect').attr('x', ml).attr('width', W - ml - mr).attr('y', amY).attr('height', amH).attr('rx', 2).style('fill', 'var(--cds-chart-grid)');
+    for (const p of pts) {
+      if (!has(p.am) || !inPull(p.t)) continue;
+      const v = +p.am;
+      const col = v >= 90 ? 'var(--color-ok)' : v >= 60 ? 'var(--color-warn)' : 'var(--color-bad)';
+      svg.append('rect').attr('x', x(p.t)).attr('width', Math.max(1, x(p.t + step) - x(p.t) + 0.3)).attr('y', amY).attr('height', amH).style('fill', col).style('opacity', 0.85);
+    }
+    const mk = (f) => pts.filter((p) => has(p[f])).map((p) => ({t: p.t + step / 2, v: +p[f]}));
+    const taken = mk('self_k'), heal = mk('heal_k');
+    const ln = d3.line((p) => x(p.t), (p) => y(p.v)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(taken).attr('d', ln).style('fill', 'none').style('stroke', 'var(--color-bad)').style('stroke-width', 2);
+    svg.append('path').datum(heal).attr('d', ln).style('fill', 'none').style('stroke', 'var(--color-ok)').style('stroke-width', 2);
+    // passages sous 35 % de vie
+    const lows = pts.filter((p) => has(p.hp_min) && +p.hp_min < 35);
+    const hpTxt = (v) => cw.fmt(Math.min(100, +v), 0, '%');
+    svg.append('g').selectAll('path').data(lows).join('path')
+      .attr('d', (p) => { const cx = x(p.t + step / 2), cy = top + 2; return `M${cx - 5},${cy} L${cx + 5},${cy} L${cx},${cy + 8} Z`; })
+      .style('fill', 'var(--color-bad)');
+    // défensifs (icônes) et morts
+    let lastX = -1e9;
+    for (const e of evs.filter((q) => q.kind === 'gros')) {
+      const cx = x(e.t);
+      const yy = cx - lastX < ICO + 2 ? -100 : 4;
+      if (yy < 0) continue;
+      lastX = cx;
+      if (e.icon) svg.append('image').attr('href', e.icon).attr('x', cx - ICO / 2).attr('y', 4).attr('width', ICO).attr('height', ICO);
+      else svg.append('circle').attr('cx', cx).attr('cy', 4 + ICO / 2).attr('r', 5).style('fill', 'var(--color-fg-muted)');
+      svg.append('line').attr('x1', cx).attr('x2', cx).attr('y1', ICO + 6).attr('y2', top + plotH).style('stroke', 'var(--cds-chart-axis)').style('stroke-dasharray', '2 3').style('opacity', 0.7);
+    }
+    svg.append('g').selectAll('rect').data(evs.filter((q) => q.kind === 'mort')).join('rect')
+      .attr('x', (e) => x(e.t) - 4).attr('y', top + plotH - 4).attr('width', 8).attr('height', 8).attr('transform', (e) => `rotate(45 ${x(e.t)} ${top + plotH})`)
+      .style('fill', 'var(--color-bad)').style('stroke', 'var(--color-panel)');
+    const rule = svg.append('line').attr('y1', top).attr('y2', top + plotH).style('stroke', 'var(--cds-chart-axis)').attr('visibility', 'hidden');
+    el.replaceChildren(svg.node());
+    const tp = cwx.tip(el);
+    const bis = d3.bisector((p) => p.t + step / 2).center;
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml - mr).attr('height', H).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [mx] = d3.pointer(ev);
+        const tt = x.invert(mx);
+        const p = pts[Math.max(0, Math.min(pts.length - 1, bis(pts, tt)))];
+        const pull = ps.find((q) => tt >= q.t && tt <= q.e);
+        rule.attr('x1', x(tt)).attr('x2', x(tt)).attr('visibility', 'visible');
+        const near = evs.filter((e) => e.kind === 'gros' && Math.abs(e.t - tt) <= 6).map((e) => e.spell);
+        const lines = [cw.mmss(tt) + (pull ? ' · pull ' + pull.n + ' : ' + pull.label : ' · entre deux pulls'),
+          'Dégâts subis : ' + cwx.kfmt(p.self_k) + ' par s · soins sur toi : ' + cwx.kfmt(p.heal_k) + ' par s',
+          has(p.am) ? 'Ferpoil : ' + cw.fmt(p.am, 0, '%') + ' du temps' + (has(p.hp_min) ? ' · vie mini : ' + hpTxt(p.hp_min) : '') : null,
+          near.length ? near.join(' · ') : null];
+        const r = svg.node().getBoundingClientRect();
+        cwx.showTip(el, tp, lines, r.left + x(tt) * r.width / W, r.top + top * r.height / H);
+      })
+      .on('pointerleave', () => { tp.hidden = true; rule.attr('visibility', 'hidden'); });
+  });
+
+  // ---------- Pulls : chiffres clés ----------
+  dash.draw('pullkpis', (el) => {
+    const s = cw.state();
+    const c = s.character;
+    const run = cw.pickRun(s);
+    const ps = cwx.pulls(run);
+    const pane = el.closest('.cw-pane');
+    const none = !ps || !ps.length;
+    if (pane) {
+      pane.querySelectorAll('.cw-has-pulls').forEach((n) => { n.hidden = none; });
+      const nn = pane.querySelector('.cw-nopulls');
+      if (nn) nn.hidden = !none;
+    }
+    el.classList.toggle('cw-off', none);
+    if (none) { el.replaceChildren(); return; }
+    const cmp = ps.filter((p) => { const k = cwx.cls(p, c); return k !== 'plus' && k !== 'none'; });
+    const you = d3.sum(cmp, (p) => p.e - p.t), tops = d3.sum(cmp, (p) => cwx.adj(p, cwx.statOf(p, c)));
+    const slower = cmp.filter((p) => ['warn', 'bad'].includes(cwx.cls(p, c))).length;
+    const ratios = cmp.map((p) => { const x = cwx.statOf(p, c); return x.p && x.m ? x.p / x.m : null; }).filter((v) => v !== null);
+    const plus = ps.filter((p) => cwx.cls(p, c) === 'plus');
+    const kpi = (label, big, rest, kl) => {
+      const d = document.createElement('div');
+      d.className = 'cw-kpi';
+      const l = document.createElement('p');
+      l.className = 'cw-kpi-l';
+      l.textContent = label;
+      const v = document.createElement('p');
+      v.className = 'cw-kpi-v';
+      const b = document.createElement('b');
+      b.textContent = big;
+      if (kl) b.className = kl;
+      v.append(b);
+      if (rest) v.append(' ' + rest);
+      d.append(l, v);
+      return d;
+    };
+    const dt = you - tops;
+    const r = ratios.length ? d3.median(ratios) * 100 : null;
+    el.replaceChildren(
+      kpi('Temps sur les pulls comparés, toi / tops', cw.mmss(you), '/ ' + cw.mmss(tops) + ' (' + cwx.signedT(dt) + ')', dt >= 60 ? 'cw-t-bad' : dt <= -30 ? 'cw-t-ok' : ''),
+      kpi('Pulls plus lents que les tops (+10 % ou plus)', String(slower), 'sur ' + cmp.length),
+      kpi('Ton ' + cwx.unit() + ' face à la médiane des tops, pull par pull', r === null ? '—' : cw.fmt(r, 0, '%'), '', r !== null && r < 85 ? 'cw-t-bad' : r !== null && r >= 100 ? 'cw-t-ok' : ''),
+      kpi('Packs que les tops ne font pas', String(plus.length), plus.length ? '(pull ' + plus.map((p) => p.n).join(', ') + ')' : ''));
+  });
+
+  // ---------- Pulls : carte façon MDT ----------
+  dash.draw('pullmap', (el) => {
+    const s = cw.state();
+    const c = s.character;
+    const run = cw.pickRun(s);
+    const all = cwx.keyRows('pull_items', run);
+    const ps = cwx.pulls(run);
+    if (!all || !ps || !ps.length) { el.replaceChildren(); return; }
+    const sel = cwx.selected(ps, c);
+    const maps = all.filter((r) => r.kind === 'map').sort((a, b) => a.order - b.order);
+    const traces = all.filter((r) => r.kind === 'trace').map((r) => String(r.pts || '').split(';').map((q) => q.split(',').map(Number)).filter((q) => q.length >= 3 && isFinite(q[0]) && isFinite(q[1])));
+    const absent = all.filter((r) => r.kind === 'absent');
+    const floors = maps.filter((m) => ps.some((p) => p.map === m.map));
+    if (!floors.length) floors.push({map: ps[0].map, label: '', aspect: 1.5});
+    const fMax = d3.max(ps, (p) => +p.forces || 0) || 1;
+    el.replaceChildren(...floors.map((m, fi) => {
+      const asp = +m.aspect || 1.5;
+      const mine = ps.filter((p) => p.map === m.map);
+      const tr = traces.map((t) => t.filter((q) => q[2] === m.map));
+      const ab = absent.filter((a) => a.map === m.map);
+      const raw = [...mine.map((p) => [p.x * asp, p.y]), ...tr.flat().map((q) => [q[0] * asp, q[1]]), ...ab.map((a) => [a.x * asp, a.y])];
+      const x0 = d3.min(raw, (p) => p[0]), x1 = d3.max(raw, (p) => p[0]), y0 = d3.min(raw, (p) => p[1]), y1 = d3.max(raw, (p) => p[1]);
+      const pad = Math.max(30, 0.1 * Math.max(x1 - x0, y1 - y0));
+      let vw = (x1 - x0) + 2 * pad, vh = (y1 - y0) + 2 * pad;
+      if (vw / vh < 0.9) vw = vh * 0.9;
+      if (vw / vh > 2) vh = vw / 2;
+      const cxm = (x0 + x1) / 2, cym = (y0 + y1) / 2;
+      const W = 320, k = W / vw, H = Math.round(vh * k);
+      const X = (x) => (x * asp - (cxm - vw / 2)) * k, Y = (y) => (y - (cym - vh / 2)) * k;
+      const svg = d3.create('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Carte des pulls' + (m.label ? ' : ' + m.label : ''));
+      // routes des tops en fond
+      for (const t of tr) {
+        if (t.length < 2) continue;
+        svg.append('path').attr('d', d3.line((q) => X(q[0]), (q) => Y(q[1]))(t)).style('fill', 'none').style('stroke', 'var(--cds-chart-muted)').style('stroke-width', 1.2).style('opacity', 0.5);
+      }
+      svg.append('g').selectAll('circle').data(tr.flat()).join('circle').attr('cx', (q) => X(q[0])).attr('cy', (q) => Y(q[1])).attr('r', 1.8).style('fill', 'var(--cds-chart-muted)').style('opacity', 0.6);
+      // ta route
+      if (mine.length > 1) svg.append('path').attr('d', d3.line((p) => X(p.x), (p) => Y(p.y))(mine)).style('fill', 'none').style('stroke', 'var(--color-fg-muted)').style('stroke-width', 1.6).style('stroke-linejoin', 'round');
+      // packs des tops que tu ne fais pas
+      const gA = svg.append('g');
+      for (const a of ab) {
+        const gg = gA.append('g').attr('class', 'cw-pm').attr('tabindex', 0).attr('aria-label', 'Pack fait par ' + a.share + ' % des tops et pas par toi : ' + a.label);
+        gg.append('circle').attr('cx', X(a.x)).attr('cy', Y(a.y)).attr('r', 7).style('fill', 'none').style('stroke', 'var(--cds-chart-reference)').style('stroke-width', 1.8).style('stroke-dasharray', '3 2');
+        gg.append('text').attr('x', X(a.x)).attr('y', Y(a.y)).attr('dy', '0.35em').attr('text-anchor', 'middle').style('fill', 'var(--color-fg-muted)').text('?');
+        gg.datum({lines: ['Pack que tu ne fais pas', a.label + ' · fait par ' + a.share + ' % des tops' + (a.forces ? ' · ' + cw.fmt(a.forces, 1) + ' % de forces' : '')]});
+      }
+      // tes pulls, écartés s'ils se chevauchent
+      const nodes = mine.map((p) => ({p, ox: X(p.x), oy: Y(p.y), x: X(p.x), y: Y(p.y), r: p.boss ? 10 : 7.5 + 6 * Math.sqrt(Math.max(0, +p.forces || 0) / fMax)}));
+      for (let it = 0; it < 80; it++) {
+        let moved = false;
+        for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i], b = nodes[j];
+          let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+          const need = a.r + b.r + 3;
+          if (d >= need) continue;
+          if (d < 0.01) { dx = 1; dy = 0.3; d = Math.hypot(dx, dy); }
+          const push = (need - d) / 2;
+          a.x -= dx / d * push; a.y -= dy / d * push; b.x += dx / d * push; b.y += dy / d * push;
+          moved = true;
+        }
+        if (!moved) break;
+      }
+      const gP = svg.append('g');
+      for (const n of nodes) {
+        const p = n.p, kc = cwx.cls(p, c), col = cwx.COL[kc];
+        if (Math.hypot(n.x - n.ox, n.y - n.oy) > 4) gP.append('line').attr('x1', n.ox).attr('y1', n.oy).attr('x2', n.x).attr('y2', n.y).style('stroke', 'var(--color-fg-muted)').style('stroke-width', 1);
+        const gg = gP.append('g').attr('class', 'cw-pm').attr('tabindex', 0).attr('role', 'button')
+          .attr('aria-label', cwx.pullLines(p, c).join(', ')).attr('aria-pressed', p === sel ? 'true' : 'false');
+        if (p === sel) gg.append('circle').attr('cx', n.x).attr('cy', n.y).attr('r', n.r + 3.5).style('fill', 'none').style('stroke', 'var(--color-fg)').style('stroke-width', 1.6);
+        const shape = p.boss
+          ? gg.append('path').attr('d', `M${n.x},${n.y - n.r} L${n.x + n.r},${n.y} L${n.x},${n.y + n.r} L${n.x - n.r},${n.y} Z`)
+          : gg.append('circle').attr('cx', n.x).attr('cy', n.y).attr('r', n.r);
+        shape.style('fill', kc === 'plus' ? 'var(--color-panel)' : cwx.tint(col, 30)).style('stroke', col).style('stroke-width', 1.8).style('stroke-dasharray', kc === 'plus' ? '4 3' : null);
+        gg.append('text').attr('x', n.x).attr('y', n.y).attr('dy', '0.35em').attr('text-anchor', 'middle').text(p.n);
+        gg.datum({lines: cwx.pullLines(p, c), n: p.n});
+      }
+      const box = document.createElement('div');
+      box.className = 'cw-floor';
+      if (m.label || floors.length > 1) {
+        const h = document.createElement('p');
+        h.className = 'cw-floor-h';
+        h.textContent = (m.label || '') + (floors.length > 1 ? (m.label ? ' · ' : '') + 'étage ' + (fi + 1) : '');
+        box.append(h);
+      }
+      box.append(svg.node());
+      const tp = cwx.tip(box);
+      svg.selectAll('.cw-pm')
+        .on('pointerenter', (ev, d) => { const r = ev.currentTarget.getBoundingClientRect(); cwx.showTip(box, tp, d.lines, r.left + r.width / 2, r.top); })
+        .on('pointerleave', () => { tp.hidden = true; })
+        .on('click', (ev, d) => { if (d.n) cwx.pick(d.n); })
+        .on('keydown', (ev, d) => { if (d.n && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); cwx.pick(d.n); } });
+      return box;
+    }));
+  });
+
+  // ---------- Pulls : bande des durées et DPS pull par pull ----------
+  dash.draw('pullstrip', (el) => {
+    const s = cw.state();
+    const c = s.character;
+    const run = cw.pickRun(s);
+    const ps = cwx.pulls(run);
+    if (!ps || !ps.length) { el.replaceChildren(); return; }
+    const sel = cwx.selected(ps, c);
+    const W = Math.max(280, el.clientWidth || 640), ml = 46, mr = 8;
+    const total = d3.sum(ps, (p) => Math.max(1, p.e - p.t));
+    const x = d3.scaleLinear([0, total], [ml, W - mr]);
+    let acc = 0;
+    const blocks = ps.map((p) => { const d = Math.max(1, p.e - p.t); const b = {p, x0: x(acc), x1: x(acc + d)}; acc += d; return b; });
+    const SH = 30, gap = 18, PH = 120, H = SH + gap + PH + 8;
+    const vals = ps.flatMap((p) => { const st = cwx.statOf(p, c); return st ? [st.p, st.hi, st.m] : []; }).filter((v) => v !== null && v !== undefined).map(Number);
+    const y = d3.scaleLinear([0, (d3.max(vals) || 1) * 1.1], [SH + gap + PH, SH + gap]).nice(3);
+    const svg = d3.create('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+    cwx.axisText(svg.append('text').attr('x', ml - 6).attr('y', SH / 2).attr('dy', '0.32em').attr('text-anchor', 'end')).text('Temps');
+    const ticks = y.ticks(3);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', ml).attr('x2', W - mr).attr('y1', (v) => y(v)).attr('y2', (v) => y(v)).style('stroke', 'var(--cds-chart-grid)');
+    cwx.axisText(svg.append('g').selectAll('text').data(ticks).join('text').attr('x', ml - 6).attr('y', (v) => y(v)).attr('dy', '0.32em').attr('text-anchor', 'end')).text((v) => (v === 0 ? '0' : cwx.kfmt(v)));
+    const gB = svg.append('g');
+    for (const b of blocks) {
+      const p = b.p, kc = cwx.cls(p, c), col = cwx.COL[kc], st = cwx.statOf(p, c) || {};
+      const w = Math.max(1, b.x1 - b.x0 - 1.5), cx = (b.x0 + b.x1) / 2;
+      const gg = gB.append('g').attr('class', 'cw-pm').attr('tabindex', 0).attr('role', 'button').attr('aria-label', cwx.pullLines(p, c).join(', ')).attr('aria-pressed', p === sel ? 'true' : 'false');
+      gg.append('rect').attr('x', b.x0 + 0.75).attr('y', 0).attr('width', w).attr('height', SH).attr('rx', 3)
+        .style('fill', kc === 'plus' ? 'var(--color-panel)' : cwx.tint(col, 30)).style('stroke', p === sel ? 'var(--color-fg)' : col).style('stroke-width', p === sel ? 2.5 : 1.5).style('stroke-dasharray', kc === 'plus' && p !== sel ? '4 3' : null);
+      if (p.boss) gg.append('path').attr('d', `M${cx},${-9} L${cx + 5},${-4} L${cx},${1} L${cx - 5},${-4} Z`).style('fill', 'var(--color-fg-muted)');
+      if (w >= 14) gg.append('text').attr('x', cx).attr('y', SH / 2).attr('dy', '0.35em').attr('text-anchor', 'middle').text(p.n);
+      // DPS : bande et médiane des tops, point pour toi
+      const bw = Math.max(4, Math.min(16, w - 4));
+      if (st.k && kc !== 'plus' && st.lo !== null && st.hi !== null) {
+        gg.append('rect').attr('x', cx - bw / 2).attr('width', bw).attr('y', y(st.hi)).attr('height', Math.max(2, y(st.lo) - y(st.hi))).attr('rx', 2).style('fill', 'var(--cds-chart-muted)').style('opacity', 0.45);
+        gg.append('line').attr('x1', cx - bw / 2 - 2).attr('x2', cx + bw / 2 + 2).attr('y1', y(st.m)).attr('y2', y(st.m)).style('stroke', 'var(--cds-chart-reference)').style('stroke-width', 2);
+      }
+      if (st.p !== null && st.p !== undefined) {
+        const pc = (kc === 'plus' || !st.m) ? 'var(--color-fg-muted)' : st.p >= st.m ? 'var(--color-ok)' : (st.lo !== null && st.p < st.lo) ? 'var(--color-bad)' : 'var(--color-warn)';
+        gg.append('circle').attr('cx', cx).attr('cy', y(st.p)).attr('r', 4.5).style('fill', pc).style('stroke', 'var(--color-panel)').style('stroke-width', 1.5);
+      }
+      gg.append('rect').attr('x', b.x0).attr('y', -10).attr('width', Math.max(1, b.x1 - b.x0)).attr('height', H + 10).style('fill', 'transparent');
+      gg.datum({lines: cwx.pullLines(p, c), n: p.n});
+    }
+    el.replaceChildren(svg.node());
+    const note = document.createElement('p');
+    note.className = 'cw-note cw-strip-note';
+    note.textContent = 'En haut, un bloc par pull, large comme le temps passé dessus (sans les déplacements), coloré comme sur la carte. En dessous, ton ' + cwx.unit() + ' sur le pull (le point : vert au-dessus de la médiane des tops, orange en dessous, rouge sous leur 1er quart) face aux tops (bande du 1er au 3e quart et trait de la médiane).';
+    el.append(note);
+    const tp = cwx.tip(el);
+    svg.selectAll('.cw-pm')
+      .on('pointerenter', (ev, d) => { const r = ev.currentTarget.getBoundingClientRect(); const sb = svg.node().getBoundingClientRect(); cwx.showTip(el, tp, d.lines, r.left + r.width / 2, sb.top); })
+      .on('pointerleave', () => { tp.hidden = true; })
+      .on('click', (ev, d) => cwx.pick(d.n))
+      .on('keydown', (ev, d) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); cwx.pick(d.n); } });
+  });
+
+  // ---------- Pulls : détail du pull choisi ----------
+  dash.draw('pulldetail', (el) => {
+    const s = cw.state();
+    const c = s.character;
+    const run = cw.pickRun(s);
+    const ps = cwx.pulls(run);
+    if (!ps || !ps.length) { el.replaceChildren(); el.classList.add('cw-off'); return; }
+    el.classList.remove('cw-off');
+    const p = cwx.selected(ps, c);
+    const st = cwx.statOf(p, c) || {};
+    const kc = cwx.cls(p, c);
+    const dur = p.e - p.t;
+    const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+    const head = mk('div', 'cw-pd-h');
+    head.append(mk('b', '', 'Pull ' + p.n + ' · ' + p.label));
+    const badge = mk('span', 'cw-badge ' + 'is-' + kc);
+    badge.style.color = cwx.COL[kc];
+    badge.textContent = kc === 'plus' ? 'Pack en plus' : st.d ? cwx.signedT(dur - cwx.adj(p, st)) + ' face aux tops' : '—';
+    head.append(badge);
+    const sub = mk('p', 'cw-pd-l', (p.boss ? 'Boss' + (p.kill ? '' : ' · essai raté') : 'Trash') + ' · de ' + cw.mmss(p.t) + ' à ' + cw.mmss(p.e)
+      + (st.nt ? ' · comparé à ' + st.k + ' top' + (st.k > 1 ? 's' : '') + ' sur ' + st.nt : ''));
+    const dl = mk('dl', 'cw-stats');
+    const stat = (label, you, tops) => { dl.append(mk('dt', '', label)); const dd = mk('dd', '', you); if (tops) { const t = mk('span', 'cw-pd-l', ' · tops ' + tops); dd.append(t); } dl.append(dd); };
+    stat('Temps', cw.mmss(dur), kc !== 'plus' && st.d ? cw.mmss(cwx.adj(p, st)) + (cwx.scaled(p, st) ? ' à tes forces (' + cw.mmss(st.d) + ' pour ' + cw.fmt(st.f, 1, '%') + ')' : '') : null);
+    if (!p.boss) stat('Forces ennemies', cw.fmt(p.forces, 1, '%'), kc !== 'plus' && st.f !== null && st.f !== undefined ? cw.fmt(st.f, 1, '%') : null);
+    stat('Monstres', cw.fmt(p.mobs_n, 0), kc !== 'plus' && st.mn ? cw.fmt(st.mn, 0) : null);
+    stat(cwx.unit(), cwx.kfmt(st.p), kc !== 'plus' && st.m ? cwx.kfmt(st.m) : null);
+    const parts = [head, sub, dl];
+    if (kc !== 'plus' && st.m && st.lo !== null && st.hi !== null && st.p !== null) {
+      const mx = Math.max(st.hi, st.p) * 1.15 || 1;
+      const bl = mk('div', 'cw-bullet');
+      bl.setAttribute('role', 'img');
+      bl.setAttribute('aria-label', 'Ton ' + cwx.unit() + ' ' + cwx.kfmt(st.p) + ', tops de ' + cwx.kfmt(st.lo) + ' à ' + cwx.kfmt(st.hi) + ', médiane ' + cwx.kfmt(st.m));
+      const track = mk('span', 'cw-b-track');
+      const band = mk('span', 'cw-b-band');
+      band.style.left = (st.lo / mx * 100) + '%';
+      band.style.width = Math.max(1, (st.hi - st.lo) / mx * 100) + '%';
+      const md = mk('span', 'cw-b-med');
+      md.style.left = (st.m / mx * 100) + '%';
+      const you = mk('span', 'cw-b-you');
+      you.style.left = (st.p / mx * 100) + '%';
+      you.style.background = st.p >= st.m ? 'var(--color-ok)' : st.p < st.lo ? 'var(--color-bad)' : 'var(--color-warn)';
+      bl.append(track, band, md, you);
+      parts.push(bl, mk('p', 'cw-pd-l', 'Ton ' + cwx.unit() + ' (point) face aux tops : bande du 1er au 3e quart, trait de la médiane.'));
+    }
+    if (p.mobs) parts.push(mk('p', 'cw-pd-mobs', p.mobs));
+    const deaths = (cw.rowsOf('death_items') || []).filter((d) => d.run_id === run.run_id && d.pull_n === p.n);
+    const ev = mk('p', 'cw-pd-l');
+    ev.textContent = 'Morts du groupe : ' + (p.deaths || 'aucune') + ' · Sorts à couper ratés par le groupe : ' + cw.fmt(p.kicks_missed, 0) + (deaths.length ? ' · ta mort : ' + deaths.map((d) => d.killer).join(', ') : '');
+    parts.push(ev);
+    if (p.tank && p.tank.who === c) {
+      const t = p.tank;
+      const dl2 = mk('dl', 'cw-stats');
+      const st2 = (label, you, tops) => { dl2.append(mk('dt', '', label)); const dd = mk('dd', '', you); if (tops) dd.append(mk('span', 'cw-pd-l', ' · tops ' + tops)); dl2.append(dd); };
+      st2('Dégâts subis par s', cwx.kfmt(t.tk), cwx.kfmt(t.ttk));
+      st2('Part soignée par toi', cw.fmt(t.sh, 0, '%'), cw.fmt(t.tsh, 0, '%'));
+      st2('Ferpoil en place', cw.fmt(t.am, 0, '%'), cw.fmt(t.tam, 0, '%'));
+      st2('Passages sous 35 %', cw.fmt(t.low, 0), cw.fmt(t.tlow, 1));
+      parts.push(mk('p', 'cw-sub-h', 'Toi, le tank'), dl2);
+    }
+    const i = ps.indexOf(p);
+    const nav = mk('div', 'cw-pd-nav');
+    const prev = mk('button', '', '‹ Pull précédent');
+    prev.type = 'button';
+    prev.disabled = i <= 0;
+    prev.addEventListener('click', () => cwx.pick(ps[i - 1].n));
+    const next = mk('button', '', 'Pull suivant ›');
+    next.type = 'button';
+    next.disabled = i >= ps.length - 1;
+    next.addEventListener('click', () => cwx.pick(ps[i + 1].n));
+    nav.append(prev, next);
+    parts.push(nav);
+    el.replaceChildren(...parts);
+  });
+
+  // ---------- Morts : une carte par mort ----------
+  dash.draw('deathcards', (el) => {
+    const s = cw.state();
+    const run = cw.pickRun(s);
+    const card = el.closest('.cw-card');
+    const rows = cw.rowsOf('death_items');
+    const done = !!run && ((cwx.keyRows('pull_items', run) || []).length > 0 || (rows || []).some((r) => r.run_id === run.run_id));
+    const ds = (rows && run) ? rows.filter((r) => r.run_id === run.run_id).sort((a, b) => a.n - b.n) : [];
+    if (card) {
+      card.querySelector('.cw-nodeath2').hidden = !(done && !ds.length);
+      card.querySelector('.cw-nodeathdata').hidden = done;
+    }
+    el.classList.toggle('cw-off', !ds.length);
+    const im = cwx.icons();
+    const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+    el.replaceChildren(...ds.map((d) => {
+      const box = mk('article', 'cw-dcard');
+      const h = mk('div', 'cw-dcard-h');
+      const tt = mk('div', 'cw-death-txt');
+      const b = mk('b', '', 'Mort ' + d.n + ' · ' + cw.mmss(d.t) + (d.pull_n ? ' · pull ' + d.pull_n : ''));
+      cw.mark(b, 'death_items', 'killer', 'item_id', d.item_id);
+      const kill = (d.hits || []).slice().sort((a, c) => (c.t || 0) - (a.t || 0))[0];
+      tt.append(b, mk('span', 'cw-plan-detail', 'Coup fatal : ' + d.killer + (kill && kill.src ? ' (' + kill.src + ')' : '') + ' · ' + (d.rank === 1 ? '1re' : d.rank + 'e') + ' mort du groupe'));
+      h.append(cwx.ico(d.icon_name, 28, im), tt);
+      box.append(h);
+      if (d.one_shot && kill && d.max_hp) {
+        const pct = kill.amount / d.max_hp * 100;
+        const os = mk('div', 'cw-oneshot');
+        os.append(mk('p', 'cw-pd-l', 'Un seul coup : ' + cw.compact(kill.amount) + ', soit ' + cw.fmt(pct, 0, '%') + ' de ta vie'));
+        const bar = mk('div', 'cw-oneshot-bar');
+        const fill = mk('i');
+        fill.style.width = Math.min(100, pct / 1.5) + '%';
+        const mark100 = mk('u');
+        mark100.style.left = (100 / 1.5) + '%';
+        bar.append(fill, mark100);
+        bar.setAttribute('role', 'img');
+        bar.setAttribute('aria-label', 'Coup de ' + cw.fmt(pct, 0, '%') + ' de ta vie maximale');
+        os.append(bar, mk('p', 'cw-pd-l', 'Le trait marque ta vie maximale.'));
+        box.append(os);
+      } else if ((d.hp || []).length > 1) {
+        const pts = d.hp;
+        const W = 300, H = 74, ml = 40, mb = 16;
+        const x = d3.scaleLinear([Math.min(-1, d3.min(pts, (p) => p[0])), 0], [ml, W - 6]);
+        const y = d3.scaleLinear([0, 100], [H - mb, 4]);
+        const svg = d3.create('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%').attr('role', 'img').attr('aria-label', 'Ta vie avant la mort');
+        [0, 50, 100].forEach((v) => {
+          svg.append('line').attr('x1', ml).attr('x2', W - 6).attr('y1', y(v)).attr('y2', y(v)).style('stroke', 'var(--cds-chart-grid)');
+          cwx.axisText(svg.append('text').attr('x', ml - 4).attr('y', y(v)).attr('dy', '0.32em').attr('text-anchor', 'end').style('font-size', '10px')).text(v + ' %');
+        });
+        cwx.axisText(svg.append('text').attr('x', ml).attr('y', H - 3).style('font-size', '10px')).text(cw.fmt(x.domain()[0], 1) + ' s');
+        cwx.axisText(svg.append('text').attr('x', W - 6).attr('y', H - 3).attr('text-anchor', 'end').style('font-size', '10px')).text('mort');
+        svg.append('path').datum(pts).attr('d', d3.area((p) => x(p[0]), y(0), (p) => y(p[1])).curve(d3.curveStepAfter)).style('fill', cwx.tint('var(--color-bad)', 22));
+        svg.append('path').datum(pts).attr('d', d3.line((p) => x(p[0]), (p) => y(p[1])).curve(d3.curveStepAfter)).style('fill', 'none').style('stroke', 'var(--color-bad)').style('stroke-width', 1.8);
+        box.append(svg.node(), mk('p', 'cw-pd-l', 'Ta vie sur les ' + cw.fmt(-x.domain()[0], 1) + ' dernières secondes.'));
+      }
+      const hits = (d.hits || []);
+      if (hits.length) {
+        const ul = mk('ul', 'cw-hits');
+        for (const hh of hits) {
+          const li = mk('li');
+          const nm = mk('span', '', hh.spell);
+          if (hh.src) nm.append(mk('span', 'cw-hit-src', ' · ' + hh.src));
+          li.append(cwx.ico(hh.icon_name, 18, im), nm, mk('span', 'cw-hit-amt', cw.compact(hh.amount)));
+          ul.append(li);
+        }
+        box.append(mk('p', 'cw-sub-h', 'Les plus gros coups des 5 dernières secondes'), ul);
+      }
+      box.append(mk('p', 'cw-pd-l', 'Soins reçus sur les 5 dernières secondes : ' + (d.heals ? cw.compact(d.heals) : 'aucun')));
+      const cds = d.cds || [];
+      if (cds.length) {
+        const ch = mk('div', 'cw-chips');
+        const txt = {actif: 'actif', pret: 'prêt, pas utilisé', recharge: 'en recharge', jamais: 'pas lancé de la clé'};
+        for (const cd of cds) {
+          const chip = mk('span', 'cw-cdchip is-' + cd.status);
+          const src = cd.icon_name ? im.get(cd.icon_name) : null;
+          if (src) chip.append(cwx.ico(cd.icon_name, 16, im)); else chip.classList.add('is-noicon');
+          chip.append(cd.name + ' · ' + (txt[cd.status] || cd.status) + (cd.status === 'recharge' && cd.ago !== null ? ' (relancé il y a ' + cd.ago + ' s)' : ''));
+          ch.append(chip);
+        }
+        box.append(mk('p', 'cw-sub-h', 'Tes défensifs à ce moment-là'), ch);
+      }
+      if (d.verdict) box.append(mk('p', 'cw-dverdict', d.verdict));
+      return box;
+    }));
+  });
+
+  // ---------- Kicks : sort par sort ----------
+  const kickRows = (run, c) => {
+    const rows = cwx.keyRows('kick_items', run);
+    if (!rows || !rows.length) return null;
+    const ord = {work: 0, ok: 1, na: 2, skip: 3};
+    return rows.map((r) => {
+      const rate = r.casts ? r.stopped / r.casts * 100 : null;
+      const t = (r.tops && r.tops[c]) || {r: null, n: 0};
+      let st = 'ok';
+      if (!t.n || t.r === null) st = 'na';
+      else if (t.r <= 20) st = 'skip';
+      else if (t.n >= 2 && t.r !== null && t.r >= 60 && r.casts >= 3 && rate < t.r - 15) st = 'work';
+      return Object.assign({}, r, {rate, tr: t.r, tn: t.n, st, you: (r.by && r.by[c]) || 0});
+    }).sort((a, b) => ord[a.st] - ord[b.st] || b.missed - a.missed || b.casts - a.casts);
+  };
+  dash.draw('kicksum', (el) => {
+    const s = cw.state();
+    const ks = kickRows(cw.pickRun(s), s.character);
+    el.classList.toggle('cw-off', !ks);
+    if (!ks) { el.textContent = ''; return; }
+    const use = ks.filter((k) => k.st === 'ok' || k.st === 'work');
+    const casts = d3.sum(use, (k) => k.casts), stopped = d3.sum(use, (k) => k.stopped);
+    const wt = use.filter((k) => k.tr !== null);
+    const tops = wt.length ? d3.sum(wt, (k) => k.tr * k.casts) / d3.sum(wt, (k) => k.casts) : null;
+    const you = d3.sum(ks, (k) => k.you);
+    const work = ks.filter((k) => k.st === 'work');
+    el.replaceChildren('Ton groupe coupe ', Object.assign(document.createElement('b'), {textContent: casts ? cw.fmt(stopped / casts * 100, 0, '%') : '—'}),
+      ' des lancers à couper (tops : ' + (tops === null ? '—' : cw.fmt(tops, 0, '%')) + '). Toi : ' + you + ' interruption' + (you > 1 ? 's' : '') + ' ou contrôle' + (you > 1 ? 's' : '') + '.'
+      + (work.length ? ' À travailler : ' + work.map((k) => k.spell).join(', ') + '.' : ''));
+  });
+  dash.draw('kickboard', (el) => {
+    const s = cw.state();
+    const c = s.character;
+    const run = cw.pickRun(s);
+    const ks = kickRows(run, c);
+    const card = el.closest('.cw-card');
+    if (card) card.querySelector('.cw-nokicks').hidden = !!ks;
+    el.classList.toggle('cw-off', !ks);
+    if (!ks) { el.replaceChildren(); return; }
+    const im = cwx.icons();
+    const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+    el.replaceChildren(...ks.map((k) => {
+      const row = mk('div', 'cw-kick' + (k.st === 'skip' || k.st === 'na' ? ' is-muted' : ''));
+      const nm = mk('div', 'cw-kick-name');
+      const b = mk('b', '', k.spell);
+      cw.mark(b, 'kick_items', 'spell', 'item_id', k.item_id);
+      nm.append(b, mk('span', 'cw-kick-sub', (k.caster || '') + (k.st === 'skip' ? ' · les tops ne le coupent pas non plus' : k.st === 'na' ? ' · pas chez les tops comparés' : '')));
+      const cell = mk('div', 'cw-kick-barcell');
+      const bar = mk('div', 'cw-kbar');
+      const fill = mk('i' , k.rate >= 99.5 ? 'is-full' : '');
+      fill.style.width = (k.rate || 0) + '%';
+      bar.append(fill);
+      if (k.tr !== null) { const u = mk('u'); u.style.left = k.tr + '%'; bar.append(u); }
+      bar.setAttribute('role', 'img');
+      bar.setAttribute('aria-label', k.stopped + ' coupés sur ' + k.casts + (k.tr !== null ? ', tops ' + k.tr + ' %' : ''));
+      cell.append(bar, mk('span', 'cw-kick-txt', k.stopped + ' / ' + k.casts + ' coupés · ' + cw.fmt(k.rate, 0, '%') + (k.tr !== null ? ' (tops ' + cw.fmt(k.tr, 0, '%') + ')' : '')));
+      const you = mk('div', 'cw-kick-you', 'Toi : ' + k.you);
+      if (k.st === 'work') { const bd = mk('span', 'cw-badge', 'À travailler'); bd.style.color = 'var(--color-bad)'; you.append(mk('br'), bd); }
+      row.append(cwx.ico(k.icon_name, 22, im), nm, cell, you);
+      return row;
     }));
   });
 </script>
