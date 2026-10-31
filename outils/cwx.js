@@ -3,7 +3,7 @@
 // Utilisation : CWX.run(spec) ; puis CWX.status() jusqu'à state "done" ; puis CWX.part('pulls') etc.
 window.CWX = (() => {
   'use strict';
-  const VERSION = '1.2';
+  const VERSION = '1.3';
   const LOW = 35, HIGH = 45; // passage sous 35 % de vie, sorti au-dessus de 45 %
 
   // Défensifs majeurs par spé (spec Warcraft Logs) : guid -> [nom français, recharge en s, durée en s].
@@ -198,11 +198,21 @@ window.CWX = (() => {
     const ready = cds.filter((c) => c.status === 'pret').map((c) => c.name);
     const used = cds.filter((c) => c.status === 'actif').map((c) => c.name);
     const kbName = kb ? kb.name : 'cause inconnue';
+    const cool = cds.filter((c) => c.status === 'recharge').map((c) => c.name);
+    const pl = (a, one, many) => a.length > 1 ? many : one;
     let verdict;
-    if (oneShot) verdict = `Tué d'un coup par ${kbName} (${fmtK(killHit.amount + (killHit.absorbed || 0))}, ${Math.round((killHit.amount + (killHit.absorbed || 0)) / maxHp * 100)} % de ta vie).`;
-    else verdict = `De ${since !== null ? '90 %' : (hp[0] ? hp[0][1] + ' %' : '?')} à 0 en ${since !== null ? String(Math.round(since * 10) / 10).replace('.', ',') : '?'} s, surtout ${hits[0] ? hits[0].spell : kbName}. Soins reçus sur les 5 dernières secondes : ${fmtK(heals)}.`;
-    if (ready.length) verdict += ` ${ready.join(' et ')} ${ready.length > 1 ? 'étaient prêts' : 'était prêt'}, pas utilisé${ready.length > 1 ? 's' : ''}.`;
-    else if (used.length) verdict += ` ${used.join(' et ')} ${used.length > 1 ? 'étaient actifs' : 'était actif'}.`;
+    if (oneShot) {
+      const amt = killHit.amount + (killHit.absorbed || 0), pct = Math.round(amt / maxHp * 100);
+      verdict = `Mort en un seul coup : ${kbName} (${fmtK(amt)}, ${pct} % de ta vie).`;
+      if (ready.length) verdict += ` ${ready.join(' et ')} ${pl(ready, 'était prêt', 'étaient prêts')}, pas ${pl(ready, 'utilisé', 'utilisés')}.`;
+      else if (used.length) verdict += ` ${used.join(' et ')} ${pl(used, 'était actif', 'étaient actifs')}.`;
+      else if (cool.length) verdict += ` ${cool.join(' et ')} ${pl(cool, 'était en recharge', 'étaient en recharge')}.`;
+      verdict += pct >= 100 ? ' Ce coup tue sans défensif : il faut l’éviter ou le prendre sous défensif.' : ' Un défensif ou un soin juste avant suffisait.';
+    } else {
+      verdict = `De ${since !== null ? '90 %' : (hp[0] ? hp[0][1] + ' %' : '?')} à 0 en ${since !== null ? String(Math.round(since * 10) / 10).replace('.', ',') : '?'} s, surtout ${hits[0] ? hits[0].spell : kbName}. Soins reçus sur les 5 dernières secondes : ${heals ? fmtK(heals) : 'aucun'}.`;
+      if (ready.length) verdict += ` ${ready.join(' et ')} ${pl(ready, 'était prêt', 'étaient prêts')}, pas ${pl(ready, 'utilisé', 'utilisés')}.`;
+      else if (used.length) verdict += ` ${used.join(' et ')} ${pl(used, 'était actif', 'étaient actifs')}.`;
+    }
     return {t: Math.round((T - F.start) / 1000), killer: kbName, killer_id: kb ? kb.guid : null, icon_name: kb ? kb.abilityIcon : null, one_shot: !!oneShot, since: since === null ? null : Math.round(since * 10) / 10, max_hp: maxHp, hp, hits, heals: Math.round(heals), cds, verdict};
   };
 
@@ -440,6 +450,26 @@ window.CWX = (() => {
     return out;
   };
 
+
+  // Icônes : JPEG 32×32 en base64 (profil ICC retiré), depuis wow.zamimg.com, pour les noms d'icônes donnés.
+  const iconB64 = async (name, px = 32) => {
+    const n = String(name).replace(/\.jpg$/, '');
+    const r = await fetch('https://wow.zamimg.com/images/wow/icons/medium/' + n + '.jpg');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const bmp = await createImageBitmap(await r.blob());
+    const c = document.createElement('canvas'); c.width = c.height = px;
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(bmp, 0, 0, px, px);
+    const bin = atob(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+    const b = Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
+    const keep = [b[0], b[1]]; let i = 2;
+    while (i + 4 <= b.length && b[i] === 0xFF && b[i + 1] !== 0xDA) { const len = (b[i + 2] << 8) | b[i + 3]; if (b[i + 1] !== 0xE2) for (let k = i; k < i + 2 + len; k++) keep.push(b[k]); i += 2 + len; }
+    for (let k = i; k < b.length; k++) keep.push(b[k]);
+    let out = ''; for (let k = 0; k < keep.length; k++) out += String.fromCharCode(keep[k]);
+    return btoa(out);
+  };
+  const icons = async (names) => { const out = {}; for (const n of [...new Set(names.filter(Boolean))]) { try { out[n] = await iconB64(n); } catch (e) { out[n] = null; } } return out; };
+  const iconNames = () => { const o = window.__CWX && window.__CWX.out; if (!o) return []; const s = new Set(); for (const d of o.deaths) { s.add(d.icon_name); d.hits.forEach((h) => s.add(h.icon_name)); d.cds.forEach((c) => s.add(c.icon_name)); } for (const k of o.kicks) s.add(k.icon_name); s.delete(null); s.delete(undefined); return [...s]; };
+
   const run = (spec) => {
     const st = {state: 'running', t0: Date.now(), log: [], out: null, err: null, key: spec.key_id};
     window.__CWX = st;
@@ -448,6 +478,6 @@ window.CWX = (() => {
   };
   const status = () => { const s = window.__CWX; return s ? {key: s.key, state: s.state, secs: Math.round((Date.now() - s.t0) / 1000), log: s.log.slice(-6), err: s.err} : null; };
   const part = (name) => { const s = window.__CWX; if (!s || !s.out) return null; return name ? s.out[name] : Object.fromEntries(Object.entries(s.out).map(([k, v]) => [k, Array.isArray(v) ? v.length : Object.keys(v).length])); };
-  return {VERSION, run, status, part, _: {fight, parseInts, parseDeathsTable, assign, DEF, AM}};
+  return {VERSION, run, status, part, icons, iconNames, _: {fight, parseInts, parseDeathsTable, assign, DEF, AM}};
 })();
 'CWX ' + window.CWX.VERSION + ' prêt';
