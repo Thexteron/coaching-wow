@@ -3,16 +3,17 @@
 // Utilisation : CWX.run(spec) ; puis CWX.status() jusqu'à state "done" ; puis CWX.part('pulls') etc.
 window.CWX = (() => {
   'use strict';
-  const VERSION = '1.0';
+  const VERSION = '1.1';
   const LOW = 35, HIGH = 45; // passage sous 35 % de vie, sorti au-dessus de 45 %
 
-  // Défensifs majeurs par spé (spec Warcraft Logs) : guid -> [nom français, recharge en s].
+  // Défensifs majeurs par spé (spec Warcraft Logs) : guid -> [nom français, recharge en s, durée en s].
+  // Recharges de base (sans talent de réduction) : « prêt » veut dire « relancé depuis plus longtemps que sa recharge ».
   const DEF = {
-    'Rogue-Assassination': {1966: ['Feinte', 15], 31224: ["Cape d'ombre", 120], 5277: ['Évasion', 120], 185311: ['Fiole cramoisie', 30]},
-    'Warrior-Arms': {118038: ["Par le fil de l'épée", 120], 23920: ['Renvoi de sort', 25], 97462: ['Cri de ralliement', 180], 202168: ['Victoire imminente', 25]},
-    'Paladin-Retribution': {642: ['Bouclier divin', 300], 184662: ['Bouclier du vengeur', 90], 498: ['Protection divine', 60], 633: ['Imposition des mains', 600]},
-    'Druid-Guardian': {22812: ['Écorce', 60], 61336: ['Instincts de survie', 180], 22842: ['Régénération frénétique', 36], 200851: ['Rage du dormeur', 90]},
-    'Shaman-Restoration': {108271: ['Transfert astral', 120], 198103: ['Élémentaire de terre', 300]},
+    'Rogue-Assassination': {1966: ['Feinte', 15, 6], 31224: ["Cape d'ombre", 120, 5], 5277: ['Évasion', 120, 10], 185311: ['Fiole cramoisie', 30, 4]},
+    'Warrior-Arms': {118038: ["Par le fil de l'épée", 120, 8], 23920: ['Renvoi de sort', 25, 5], 97462: ['Cri de ralliement', 180, 10], 202168: ['Victoire imminente', 25, 0]},
+    'Paladin-Retribution': {642: ['Bouclier divin', 300, 8], 184662: ['Bouclier du vengeur', 90, 10], 498: ['Protection divine', 60, 8], 633: ['Imposition des mains', 600, 0]},
+    'Druid-Guardian': {22812: ['Écorce', 60, 8], 61336: ['Instincts de survie', 180, 6], 22842: ['Régénération frénétique', 36, 3], 200851: ['Rage du dormeur', 90, 8]},
+    'Shaman-Restoration': {108271: ['Transfert astral', 120, 12], 198103: ['Élémentaire de terre', 300, 0]},
   };
   // Mitigation active des tanks (buff sur le tank).
   const AM = {'Druid-Guardian': 192081, 'Warrior-Protection': 132404, 'Paladin-Protection': 132403, 'DemonHunter-Vengeance': 203819, 'DeathKnight-Blood': 195181, 'Monk-Brewmaster': 215479};
@@ -60,7 +61,7 @@ window.CWX = (() => {
   const mmss = (s) => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   const sOf = (txt) => { const m = String(txt).trim().match(/^(\d+):(\d{2})(?:\.(\d+))?$/); return m ? +m[1] * 60 + +m[2] : null; };
   const icoName = (src) => src ? String(src).split('/').pop().split('?')[0] : null;
-  const baseName = (n) => String(n || '').replace(/\s+\d+$/, '').trim();
+  const baseName = (n) => String(n || '').replace(/\s+/g, ' ').trim().replace(/\s+\d+$/, '');
 
   // ---------- combat ----------
   const fight = async (code, fid) => {
@@ -169,8 +170,9 @@ window.CWX = (() => {
     const T = de.timestamp;
     const mine = evs.filter((x) => x.type !== 'death' && x.targetID === +pid);
     const hp = mine.filter((x) => x.maxHitPoints && x.hitPoints !== undefined && (T - x.timestamp) <= 10000)
-      .map((x) => [Math.round((x.timestamp - T) / 100) / 10, Math.round(x.hitPoints / x.maxHitPoints * 100)])
-      .sort((a, b) => a[0] - b[0]);
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map((x) => [Math.round((x.timestamp - T) / 10) / 100, Math.round(x.hitPoints / x.maxHitPoints * 100)]);
+    if (hp.length && hp[hp.length - 1][0] < 0) hp.push([0, 0]);
     const maxHp = (mine.find((x) => x.maxHitPoints) || {}).maxHitPoints || null;
     const recent = mine.filter((x) => (T - x.timestamp) <= 5000);
     const hitsAll = recent.filter((x) => x.type === 'damage' && x.amount > 0);
@@ -183,8 +185,8 @@ window.CWX = (() => {
     const seen = new Set();
     const cds = (j.cooldowns || []).filter((c) => table[c.guid]).map((c) => {
       seen.add(c.guid);
-      const ago = (c.total || 0) / 1000, cd = table[c.guid][1];
-      const status = ago <= 10 ? 'utilise' : (ago > cd ? 'pret' : 'recharge');
+      const ago = (c.total || 0) / 1000, cd = table[c.guid][1], dur = table[c.guid][2];
+      const status = (dur && ago <= dur) ? 'actif' : (ago > cd ? 'pret' : 'recharge');
       return {name: table[c.guid][0], id: c.guid, icon_name: c.abilityIcon || null, status, ago: Math.round(ago)};
     });
     for (const [g, v] of Object.entries(table)) if (!seen.has(+g)) cds.push({name: v[0], id: +g, icon_name: null, status: 'jamais', ago: null});
@@ -194,7 +196,7 @@ window.CWX = (() => {
     const killHit = hitsAll.slice().sort((a, b) => b.timestamp - a.timestamp)[0];
     const oneShot = since !== null && since <= 1.5 && killHit && maxHp && (killHit.amount + (killHit.absorbed || 0)) >= 0.5 * maxHp;
     const ready = cds.filter((c) => c.status === 'pret').map((c) => c.name);
-    const used = cds.filter((c) => c.status === 'utilise').map((c) => c.name);
+    const used = cds.filter((c) => c.status === 'actif').map((c) => c.name);
     const kbName = kb ? kb.name : 'cause inconnue';
     let verdict;
     if (oneShot) verdict = `Tué d'un coup par ${kbName} (${fmtK(killHit.amount + (killHit.absorbed || 0))}, ${Math.round((killHit.amount + (killHit.absorbed || 0)) / maxHp * 100)} % de ta vie).`;
@@ -207,17 +209,26 @@ window.CWX = (() => {
   // ---------- appariement des pulls d'un top avec les nôtres ----------
   const contain = (a, b) => { let mn = 0, tot = 0; for (const k of Object.keys(a)) { const x = Math.min(10, a[k]); tot += x; mn += Math.min(x, Math.min(10, b[k] || 0)); } return tot ? mn / tot : 0; };
   const dist = (p, o) => (p.map && o.map && p.map !== o.map) ? 1e9 : Math.hypot(p.cx - o.cx, p.cy - o.cy);
+  // Chaque pull d'un top est réparti entre nos pulls au prorata des monstres en commun (proches dans l'espace) :
+  // renvoie pour chaque pull du top une liste [[indexDeNotrePull, poids], …] (vide = pack que nous n'avons pas fait).
+  const overlap = (a, b) => { let mn = 0; for (const k of Object.keys(a)) mn += Math.min(Math.min(10, a[k]), Math.min(10, b[k] || 0)); return mn; };
   const assign = (us, top) => top.pulls.map((tp) => {
-    if (tp.boss) { const c = us.pulls.filter((p) => p.boss === tp.boss); if (!c.length) return -1; const k = c.filter((p) => p.kill); return us.pulls.indexOf((k.length ? k : c)[(k.length ? k : c).length - 1]); }
+    if (tp.boss) { const c = us.pulls.filter((p) => p.boss === tp.boss); if (!c.length) return []; const k = c.filter((p) => p.kill); const pick = (k.length ? k : c); return [[us.pulls.indexOf(pick[pick.length - 1]), 1]]; }
     const trash = us.pulls.filter((p) => !p.boss);
-    const score = (p) => contain(tp.mobs, p.mobs) / (1 + Math.pow(dist(tp, p) / 6000, 2));
-    let pool = trash.filter((p) => p.seg === tp.seg);
-    let best = null, bs = 0;
-    for (const p of pool) { const s = score(p); if (s > bs) { bs = s; best = p; } }
-    if (!best || bs < 0.05) { for (const p of trash) { const s = score(p); if (s > bs) { bs = s; best = p; } } }
-    if (!best || bs < 0.05) { let bd = 3500; best = null; for (const p of trash) { const d = dist(tp, p); if (d < bd) { bd = d; best = p; } } }
-    return best ? us.pulls.indexOf(best) : -1;
+    const sc = (pool) => pool.map((p) => [p, overlap(tp.mobs, p.mobs) / (1 + Math.pow(dist(tp, p) / 6000, 2))]).filter((x) => x[1] > 0);
+    let cand = sc(trash.filter((p) => p.seg === tp.seg));
+    if (!cand.length) cand = sc(trash);
+    if (cand.length) {
+      const mx = Math.max(...cand.map((x) => x[1]));
+      cand = cand.filter((x) => x[1] >= 0.15 * mx);
+      const tot = cand.reduce((s, x) => s + x[1], 0);
+      return cand.map(([p, v]) => [us.pulls.indexOf(p), v / tot]);
+    }
+    let bd = 3500, best = null;
+    for (const p of trash) { const d = dist(tp, p); if (d < bd) { bd = d; best = p; } }
+    return best ? [[us.pulls.indexOf(best), 1]] : [];
   });
+  const share = (asg, k, i) => { const a = asg[k].find((x) => x[0] === i); return a ? a[1] : 0; };
 
   // ---------- analyse d'une clé ----------
   // spec = {key_id, code, fight, players: [{character, run_id, group_id, source_id, spec ("Druid-Guardian"), metric ("dps"|"hps"), tops: [{name, code, fight, source_id}]}]}
@@ -276,7 +287,7 @@ window.CWX = (() => {
       log(P.character + ' : ' + tops.length + ' tops chargés');
       charData[P.character] = {P, tops, tk, sYou};
       for (const o of tops) {
-        o.F.pulls.forEach((tp, k) => { if (o.asg[k] < 0 && !tp.boss) allTopPulls.push({key: o.F.code + '-' + o.F.fid, tp}); });
+        o.F.pulls.forEach((tp, k) => { if (!o.asg[k].length && !tp.boss) allTopPulls.push({key: o.F.code + '-' + o.F.fid, tp}); });
         if (!traceTops.some((x) => x.F.code === o.F.code && x.F.fid === o.F.fid)) traceTops.push(o);
       }
     }
@@ -296,17 +307,18 @@ window.CWX = (() => {
         const per = [], durs = [], forc = [], mobn = [];
         const tkv = {taken: [], sh: [], am: [], low: []};
         for (const o of D.tops) {
-          const mine = o.F.pulls.filter((tp, k) => o.asg[k] === i);
-          if (!mine.length) continue;
-          const td = mine.reduce((s, tp) => s + (tp.e - tp.s) / 1000, 0);
-          const dmg = mine.reduce((s, tp) => s + integ(o.s, tp.s, tp.e), 0);
+          const mine = o.F.pulls.map((tp, k) => [tp, share(o.asg, k, i)]).filter((x) => x[1] > 0);
+          const w = mine.reduce((s, [, v]) => s + v, 0);
+          if (w < 0.25) continue;
+          const td = mine.reduce((s, [tp, v]) => s + v * (tp.e - tp.s) / 1000, 0);
+          const dmg = mine.reduce((s, [tp, v]) => s + v * integ(o.s, tp.s, tp.e), 0);
           durs.push(td); if (td > 0) per.push(dmg / td);
-          forc.push(mine.reduce((s, tp) => s + (tp.forces || 0), 0)); mobn.push(mine.reduce((s, tp) => s + tp.mobN, 0));
+          forc.push(mine.reduce((s, [tp, v]) => s + v * (tp.forces || 0), 0)); mobn.push(mine.reduce((s, [tp, v]) => s + v * tp.mobN, 0));
           if (o.tk) {
-            const tt = mine.reduce((s, tp) => s + integ(o.tk.taken, tp.s, tp.e), 0), th = mine.reduce((s, tp) => s + integ(o.tk.heal, tp.s, tp.e), 0);
-            const cov = mine.reduce((s, tp) => s + covered(o.tk.bands, tp.s, tp.e), 0);
+            const tt = mine.reduce((s, [tp, v]) => s + v * integ(o.tk.taken, tp.s, tp.e), 0), th = mine.reduce((s, [tp, v]) => s + v * integ(o.tk.heal, tp.s, tp.e), 0);
+            const cov = mine.reduce((s, [tp, v]) => s + v * covered(o.tk.bands, tp.s, tp.e), 0);
             tkv.taken.push(td > 0 ? tt / td : null); tkv.sh.push(tt > 0 ? th / tt * 100 : null); tkv.am.push(td > 0 ? cov / (td * 1000) * 100 : null);
-            tkv.low.push(mine.reduce((s, tp) => s + o.tk.dips.filter((dp) => dp.s >= tp.s && dp.s <= tp.e).length, 0));
+            tkv.low.push(mine.reduce((s, [tp, v]) => s + v * o.tk.dips.filter((dp) => dp.s >= tp.s && dp.s <= tp.e).length, 0));
           }
         }
         row.chars[c] = {p: kilo(you), m: kilo(med(per)), lo: kilo(q(per, 0.25)), hi: kilo(q(per, 0.75)), d: r0(med(durs)), f: r1(med(forc)), mn: r0(med(mobn)), k: durs.length, nt: D.tops.length};
