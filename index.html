@@ -149,6 +149,19 @@ api._run=run;return api;})();</script>
   .cw-bullet .cw-b-med { position: absolute; top: 0; width: 2px; height: 14px; background: var(--cds-chart-reference); }
   .cw-bullet .cw-b-you { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; border: 2px solid var(--color-panel); }
   .cw-strip { position: relative; margin-top: var(--cds-gap-md); }
+  .cw-pull-extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: var(--cds-gap-md); margin-top: var(--cds-gap-md); }
+  .cw-px { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+  .cw-px .cw-sub-h { margin: 0; }
+  .cw-px p { margin: 0; }
+  .cw-pxl { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: var(--cds-font-size-caption); line-height: 1.45; }
+  .cw-pxl b { font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+  .cw-pxl li { color: var(--color-fg-muted); }
+  .cw-pxl li.is-bad { border-left: 3px solid var(--color-bad); padding-left: 6px; }
+  .cw-pxl li.is-warn { border-left: 3px solid var(--color-warn); padding-left: 6px; }
+  .cw-mini { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem; gap: 2px var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); }
+  .cw-mini .cw-mini-n { grid-column: 1 / 3; color: var(--color-fg); }
+  .cw-mini .cw-bar-track { height: 6px; }
+  .cw-mini .cw-mini-v { text-align: right; font-variant-numeric: tabular-nums; color: var(--color-fg-muted); }
   .cw-strip svg { display: block; overflow: visible; }
   .cw-strip-note { margin-top: var(--cds-gap-xs); }
   .cw-dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--cds-gap-md); }
@@ -364,8 +377,19 @@ api._run=run;return api;})();</script>
               </div>
               <div class="cw-pd" data-draw="pulldetail" data-source="pull_items runs characters death_items"></div>
             </div>
+            <div class="cw-pull-extra cw-has-pulls" data-draw="pullextra" data-source="pull_items runs characters"></div>
             <div class="cw-strip cw-has-pulls" data-draw="pullstrip" data-source="pull_items runs characters"></div>
             <p class="cw-note cw-nopulls" hidden>Pas encore calculé pour cette clé : le pull par pull arrive avec les prochaines analyses (les clés les plus récentes d'abord).</p>
+          </div>
+          <div class="cw-card cw-keycds-card">
+            <h3>Tes gros CD sur toute la clé</h3>
+            <p class="cw-note">Combien de fois tu poses chaque gros CD, face à la médiane des tops, et sur quoi le plus souvent : <span class="cw-heal">le sort ennemi qui fait le plus de dégâts au groupe à ce moment-là</span><span class="cw-dps" hidden>le sort ennemi qui fait le plus de dégâts au groupe à ce moment-là pour un défensif, le monstre que tu tapes le plus pour un CD offensif</span>.</p>
+            <div class="cw-tablewrap cw-flush">
+              <table class="cw-table">
+                <thead><tr><th>Gros CD</th><th class="cw-num">Toi</th><th class="cw-num">Tops</th><th>Toi, surtout sur</th><th>Tops, surtout sur</th></tr></thead>
+                <tbody data-draw="keycds" data-source="pull_items runs characters"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -415,6 +439,7 @@ api._run=run;return api;})();</script>
         <div class="cw-pane" id="route" data-pane-of="route" hidden>
           <div class="cw-card">
             <h3>Ta route face à celle des tops</h3>
+            <p class="cw-note">Ton <span class="cw-heal">HPS</span><span class="cw-dps" hidden>DPS</span> pull par pull, tes gros CD et les sorts ennemis de chaque pull sont dans l'onglet Pulls.</p>
             <p class="cw-note">Toutes les clés ne font pas les mêmes packs. On compare donc ce que vous faites tous les deux : chaque boss, et le trash entre deux boss. Le temps d'un boss compte ses wipes. Les morts sont les tiennes, face à la médiane de celles des tops comparés.</p>
             <div class="cw-kpis">
               <div class="cw-kpi"><p class="cw-kpi-l">Monstres en commun avec les tops</p><p class="cw-kpi-v"><b data-draw="rsim" data-source="route_items">—</b></p></div>
@@ -1201,7 +1226,34 @@ api._run=run;return api;})();</script>
     };
     const keyRows = (source, run) => { const k = keyOf(run); const rows = cw.rowsOf(source); return rows && k ? rows.filter((r) => r.key_id === k) : null; };
     const pulls = (run) => { const r = keyRows('pull_items', run); return r ? r.filter((x) => x.kind === 'pull').sort((a, b) => a.n - b.n) : null; };
-    const statOf = (p, c) => (p && p.chars && p.chars[c]) || null;
+    // Noms d'une clé (format v2 : les pulls référencent un dictionnaire par clé)
+    const dictCache = new Map();
+    const namesOf = (key) => {
+      const rows = cw.rowsOf('pull_items') || [];
+      const hit = dictCache.get(key);
+      if (hit && hit.rows === rows) return hit.names;
+      const d = rows.find((r) => r.key_id === key && r.kind === 'dict');
+      const names = (d && d.names) || [];
+      dictCache.set(key, {rows, names});
+      return names;
+    };
+    const expCache = new WeakMap();
+    const statOf = (p, c) => {
+      if (!p) return null;
+      if (p.chars) return p.chars[c] || null;
+      const a = p.c && p.c[c];
+      if (!a) return null;
+      let m = expCache.get(p);
+      if (!m) { m = {}; expCache.set(p, m); }
+      if (m[c]) return m[c];
+      const N = namesOf(p.key_id);
+      const nm = (i) => (i === null || i === undefined || i < 0) ? null : (N[i] || null);
+      m[c] = {p: a[0], m: a[1], lo: a[2], hi: a[3], d: a[4], f: a[5], mn: a[6], k: a[7], nt: a[8],
+        cd: (a[9] || []).map(([n, yon, pct, on]) => ({name: nm(n), you: (yon || []).map(nm).filter(Boolean), pct, on: nm(on)})),
+        tg: (a[10] || []).map(([n, y, tt]) => ({mob: nm(n), you: y, tops: tt})), same: a[11] || 0, v2: true};
+      return m[c];
+    };
+    const hurtOf = (p) => { if (!p || !p.hurt) return []; const N = namesOf(p.key_id); return p.hurt.map(([n, y, tt]) => ({name: N[n] || '?', you: y, tops: tt})); };
     // Temps des tops ramené à tes forces ennemies sur un pull de trash (ils ont parfois pris plus ou moins de monstres).
     const scaled = (p, x) => !!x && !p.boss && +x.f > 0 && +p.forces > 0 && Math.abs(p.forces / x.f - 1) >= 0.05;
     const adj = (p, x) => { if (!x || !x.d) return null; if (!scaled(p, x)) return x.d; return x.d * Math.max(0.5, Math.min(2, p.forces / x.f)); };
@@ -1255,7 +1307,7 @@ api._run=run;return api;})();</script>
       if (x.p !== undefined && x.p !== null) out.push(unit() + ' : ' + kfmt(x.p) + (k !== 'plus' && x.m ? ' · tops : ' + kfmt(x.m) : ''));
       return out;
     };
-    return {keyOf, me, tank, unit, icons, ico, keyRows, pulls, statOf, scaled, adj, cls, COL, tint, signedT, kfmt, selected, pick, tip, showTip, axisText, pullLines};
+    return {keyOf, me, tank, unit, icons, ico, keyRows, pulls, statOf, hurtOf, scaled, adj, cls, COL, tint, signedT, kfmt, selected, pick, tip, showTip, axisText, pullLines};
   })();
 
   dash.draw('defnames', (el) => {
@@ -1606,6 +1658,91 @@ api._run=run;return api;})();</script>
       .on('pointerleave', () => { tp.hidden = true; })
       .on('click', (ev, d) => cwx.pick(d.n))
       .on('keydown', (ev, d) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); cwx.pick(d.n); } });
+  });
+
+  // ---------- Pulls : sorts ennemis, gros CD et cibles du pull choisi ----------
+  dash.draw('pullextra', (el) => {
+    const s = cw.state();
+    const c = s.character;
+    const run = cw.pickRun(s);
+    const ps = cwx.pulls(run);
+    if (!ps || !ps.length) { el.replaceChildren(); return; }
+    const p = cwx.selected(ps, c);
+    const st = cwx.statOf(p, c) || {};
+    const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+    const blocks = [];
+    // ce qui fait mal au groupe
+    const hurt = cwx.hurtOf(p);
+    if (hurt.length) {
+      const box = mk('div', 'cw-px');
+      box.append(mk('p', 'cw-sub-h', 'Ce qui fait mal au groupe ici'));
+      const mx = Math.max(1, ...hurt.map((h) => Math.max(h.you || 0, h.tops || 0)));
+      for (const h of hurt) {
+        const g = mk('div', 'cw-mini');
+        g.append(mk('span', 'cw-mini-n', h.name));
+        const bar = (v, col) => { const tr = mk('span', 'cw-bar-track'); const f = mk('span', 'cw-bar-fill'); f.style.width = Math.max(1, (v || 0) / mx * 100) + '%'; f.style.background = col; tr.append(f); return tr; };
+        const worse = h.tops !== null && (h.you || 0) > (h.tops || 0) * 1.25 && (h.you || 0) - (h.tops || 0) >= 10;
+        g.append(bar(h.you, worse ? 'var(--color-bad)' : dash.colors[0]), mk('span', 'cw-mini-v', 'Vous ' + cwx.kfmt(h.you)));
+        if (h.tops !== null) g.append(bar(h.tops, 'var(--cds-chart-muted)'), mk('span', 'cw-mini-v', 'Tops ' + cwx.kfmt(h.tops)));
+        box.append(g);
+      }
+      box.append(mk('p', 'cw-pd-l', 'Dégâts par seconde sur tout ton groupe (vous) pendant le pull, face à la médiane des groupes des tops sur les mêmes monstres.'));
+      blocks.push(box);
+    }
+    // gros CD
+    if (st.v2) {
+      const box = mk('div', 'cw-px');
+      box.append(mk('p', 'cw-sub-h', 'Tes gros CD ici'));
+      const ul = mk('ul', 'cw-pxl');
+      for (const x of st.cd || []) {
+        const li = mk('li');
+        if (!x.you.length) {
+          li.className = x.pct >= 75 ? 'is-bad' : 'is-warn';
+          li.append(mk('b', '', x.name), ' : ' + x.pct + ' % des tops le posent sur ce pull' + (x.on ? ', surtout sur ' + x.on : '') + '. Pas toi.');
+        } else {
+          li.append(mk('b', '', x.name), ' : tu le poses ici' + (x.you.length ? ' (sur ' + x.you.join(', ') + ')' : '') + ', seulement ' + x.pct + ' % des tops le font sur ce pull' + (x.on ? ' (eux : sur ' + x.on + ')' : '') + '.');
+        }
+        ul.append(li);
+      }
+      if (st.same) ul.append(mk('li', '', st.same + ' gros CD posé' + (st.same > 1 ? 's' : '') + ' ici comme les tops.'));
+      if (!ul.children.length) ul.append(mk('li', '', 'Aucun gros CD sur ce pull, ni chez toi ni chez la plupart des tops.'));
+      box.append(ul);
+      blocks.push(box);
+    }
+    // cibles (DPS et tank)
+    if (st.v2 && cwx.unit() === 'DPS') {
+      const box = mk('div', 'cw-px');
+      box.append(mk('p', 'cw-sub-h', 'Tes cibles ici'));
+      if (st.tg && st.tg.length) {
+        for (const x of st.tg) {
+          const g = mk('div', 'cw-mini');
+          g.append(mk('span', 'cw-mini-n', x.mob));
+          const bar = (v, col) => { const tr = mk('span', 'cw-bar-track'); const f = mk('span', 'cw-bar-fill'); f.style.width = Math.max(1, v || 0) + '%'; f.style.background = col; tr.append(f); return tr; };
+          g.append(bar(x.you, dash.colors[0]), mk('span', 'cw-mini-v', 'Toi ' + cw.fmt(x.you, 0, '%')));
+          if (x.tops !== null) g.append(bar(x.tops, 'var(--cds-chart-muted)'), mk('span', 'cw-mini-v', 'Tops ' + cw.fmt(x.tops, 0, '%')));
+          box.append(g);
+        }
+        box.append(mk('p', 'cw-pd-l', 'Part de tes dégâts sur chaque monstre du pull, face à la médiane des tops.'));
+      } else box.append(mk('p', 'cw-pd-l', 'Tu répartis tes dégâts sur les monstres comme les tops (à 5 points près).'));
+      blocks.push(box);
+    }
+    el.replaceChildren(...blocks);
+  });
+
+  dash.draw('keycds', (tbody) => {
+    const s = cw.state();
+    const run = cw.pickRun(s);
+    const rows = cwx.keyRows('pull_items', run) || [];
+    const r = rows.find((x) => x.kind === 'cds' && (x.run_id === (run && run.run_id) || x.character === s.character));
+    const card = tbody.closest('.cw-card');
+    if (card) card.classList.toggle('cw-off', !(r && r.cds && r.cds.length));
+    if (!r || !r.cds) { tbody.replaceChildren(); return; }
+    tbody.replaceChildren(...r.cds.map((x) => {
+      const tr = document.createElement('tr');
+      const low = x.tops && x.toi < x.tops * 0.75;
+      tr.append(cw.td(x.cd), cw.td(cw.fmt(x.toi, 0), 'cw-num' + (low ? ' cw-t-bad' : '')), cw.td(cw.fmt(x.tops, Number.isInteger(+x.tops) ? 0 : 1), 'cw-num'), cw.td(x.toi ? (x.toi_sur || '—') : '—'), cw.td(x.tops_sur || '—'));
+      return tr;
+    }));
   });
 
   // ---------- Pulls : détail du pull choisi ----------
