@@ -416,9 +416,12 @@ window.CWX = (() => {
             const yc = mineC.filter((cst) => cst.id === +id);
             const sh = kk ? (tUse[id] || 0) / kk : 0;
             if (!yc.length && sh < 0.3) continue;
-            cd.push([def[0], yc.length ? [...new Set(yc.map((cst) => cst.on || '?'))].join(' · ') : null, Math.round(sh * 100), mode(tOn[id] || [])]);
+            cd.push([def[0], [...new Set(yc.map((cst) => cst.on).filter(Boolean))].slice(0, 2), Math.round(sh * 100), mode(tOn[id] || []), yc.length]);
           }
-          if (cd.length) row.chars[c].cd = cd;
+          // priorité : CD que les tops posent ici et pas toi, puis ceux que tu poses et pas eux, puis le reste ; 3 au plus
+          const rank = (x) => (!x[4] && x[2] >= 50) ? 0 : (x[4] && x[2] < 50) ? 1 : 2;
+          cd.sort((a, b) => rank(a) - rank(b) || b[2] - a[2]);
+          if (cd.length) row.chars[c].cd = cd.slice(0, 3).map((x) => x.slice(0, 4));
         }
         // cibles (DPS et tank) : part de tes dégâts sur chaque monstre, face aux tops
         if (D.gtgYou) {
@@ -554,6 +557,22 @@ window.CWX = (() => {
         };
       }
     }
+    // format compact (v 2) : noms dans un dictionnaire par clé, chiffres des persos en tableaux
+    // c[perso] = [p, m, lo, hi, d, f, mn, k, nt, cd, tg] ; cd = [[nom, [sur…], % tops, sur (tops)]] ; tg = [[monstre, % toi, % tops]] ; hurt = [[sort, toi k/s, tops k/s]]
+    const dict = [], idx = new Map();
+    const ref = (nm) => { if (nm === null || nm === undefined) return -1; nm = nm === 'Melee' ? 'Mêlée' : String(nm); if (!idx.has(nm)) { idx.set(nm, dict.length); dict.push(nm); } return idx.get(nm); };
+    for (const row of out.pulls) {
+      if (row.hurt) row.hurt = row.hurt.map(([nm, y, t]) => [ref(nm), y, t]);
+      const c2 = {};
+      for (const [c, x] of Object.entries(row.chars || {})) {
+        const cd = (x.cd || []).map(([nm, yon, pct, ton]) => [ref(nm), yon.map(ref), pct, ref(ton)]);
+        const tg = (x.tg || []).map(([nm, y, t]) => [ref(nm), y, t]);
+        c2[c] = [x.p, x.m, x.lo, x.hi, x.d, x.f, x.mn, x.k, x.nt, cd, tg];
+      }
+      delete row.chars; row.c = c2; row.v = 2;
+    }
+    out.pulls.push({item_id: spec.key_id + '-dict', key_id: spec.key_id, kind: 'dict', names: dict});
+    for (const c of Object.keys(out.summary)) for (const g of out.summary[c].gros_cd || []) { if (g.toi_sur === 'Melee') g.toi_sur = 'Mêlée'; if (g.tops_sur === 'Melee') g.tops_sur = 'Mêlée'; }
     log('terminé');
     return out;
   };
