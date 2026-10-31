@@ -560,11 +560,15 @@ window.CWX = (() => {
         };
       }
     }
+    for (const c of Object.keys(out.summary)) for (const g of out.summary[c].gros_cd || []) { if (g.toi_sur === 'Melee') g.toi_sur = 'Mêlée'; if (g.tops_sur === 'Melee') g.tops_sur = 'Mêlée'; }
+    // gros CD sur toute la clé, par perso : lancers et sur quoi, toi face aux tops
+    for (const [c, D] of Object.entries(charData)) out.pulls.push({item_id: spec.key_id + '-cds-' + D.P.run_id, key_id: spec.key_id, kind: 'cds', character: c, run_id: D.P.run_id, cds: out.summary[c].gros_cd});
     // format compact (v 2) : noms dans un dictionnaire par clé, chiffres des persos en tableaux
     // c[perso] = [p, m, lo, hi, d, f, mn, k, nt, cd, tg, same] ; tg vide = mêmes cibles que les tops ; same = gros CD posés ici comme les tops ; cd = [[nom, [sur…], % tops, sur (tops)]] ; tg = [[monstre, % toi, % tops]] ; hurt = [[sort, toi k/s, tops k/s]]
     const dict = [], idx = new Map();
     const ref = (nm) => { if (nm === null || nm === undefined) return -1; nm = nm === 'Melee' ? 'Mêlée' : String(nm); if (!idx.has(nm)) { idx.set(nm, dict.length); dict.push(nm); } return idx.get(nm); };
     for (const row of out.pulls) {
+      if (row.kind !== 'pull') continue;
       if (row.hurt) row.hurt = row.hurt.map(([nm, y, t]) => [ref(nm), y, t]);
       const c2 = {};
       for (const [c, x] of Object.entries(row.chars || {})) {
@@ -575,7 +579,6 @@ window.CWX = (() => {
       delete row.chars; row.c = c2; row.v = 2;
     }
     out.pulls.push({item_id: spec.key_id + '-dict', key_id: spec.key_id, kind: 'dict', names: dict});
-    for (const c of Object.keys(out.summary)) for (const g of out.summary[c].gros_cd || []) { if (g.toi_sur === 'Melee') g.toi_sur = 'Mêlée'; if (g.tops_sur === 'Melee') g.tops_sur = 'Mêlée'; }
     log('terminé');
     return out;
   };
