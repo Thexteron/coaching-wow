@@ -176,7 +176,7 @@ api._run=run;return api;})();</script>
   </section>
 
   <section class="cw-page" id="indicateurs" data-page-of="indicateurs" hidden>
-    <p class="cw-note">Valeurs du dernier rapport. « Tops » est la médiane des joueurs comparés : 5 par clé ou par boss, même contenu et même niveau, ilvl à ±3, sans buff externe, en priorité avec le même type de tank que toi. La jauge montre où tu en es par rapport à eux (pleine = à leur niveau). La petite courbe montre chaque clé ou combat, du plus ancien au plus récent : vert au niveau des tops ou mieux, rouge en dessous, pointillés = tops.</p>
+    <p class="cw-note">Valeurs du dernier rapport. « Tops » est la médiane des joueurs comparés : 10 par clé ou par boss (5 avant le 30/10), même contenu et même niveau, ilvl à ±3, sans buff externe, en priorité avec le même type de tank que toi. La jauge montre où tu en es par rapport à eux (pleine = à leur niveau). La petite courbe montre chaque clé ou combat, du plus ancien au plus récent : vert au niveau des tops ou mieux, rouge en dessous, pointillés = tops.</p>
     <div class="cw-card cw-tablewrap">
       <table class="cw-table" id="table-indicateurs" data-source="metrics" data-row-key="row_id">
         <thead>
@@ -267,7 +267,7 @@ api._run=run;return api;})();</script>
         <div class="cw-pane" id="route" data-pane-of="route" hidden>
           <div class="cw-card">
             <h3>Ta route face à celle des tops</h3>
-            <p class="cw-note">Toutes les clés ne font pas les mêmes packs. On compare donc ce que vous faites tous les deux : chaque boss, et le trash entre deux boss. Le temps d'un boss compte ses wipes. Les morts sont les tiennes, face à la médiane de celles des 5 tops.</p>
+            <p class="cw-note">Toutes les clés ne font pas les mêmes packs. On compare donc ce que vous faites tous les deux : chaque boss, et le trash entre deux boss. Le temps d'un boss compte ses wipes. Les morts sont les tiennes, face à la médiane de celles des tops comparés.</p>
             <div class="cw-kpis">
               <div class="cw-kpi"><p class="cw-kpi-l">Monstres en commun avec les tops</p><p class="cw-kpi-v"><b data-draw="rsim" data-source="route_items">—</b></p></div>
               <div class="cw-kpi"><p class="cw-kpi-l">Durée de la clé, toi / tops</p><p class="cw-kpi-v"><b data-draw="rdur" data-source="route_items">—</b> / <span data-draw="rtopdur" data-source="route_items">—</span></p></div>
@@ -306,7 +306,7 @@ api._run=run;return api;})();</script>
 
         <div class="cw-pane" id="compares" data-pane-of="joueurs" hidden>
           <div class="cw-card">
-            <p class="cw-note">Les 5 joueurs de ta spé retenus dans le classement pour ce donjon et ce niveau, ou ce boss et cette difficulté : sans buff externe, ilvl à ±3, en priorité avec le même type de tank que toi. « Route en commun » : part des monstres que vous avez tués tous les deux.</p>
+            <p class="cw-note">Les joueurs de ta spé retenus dans le classement (10 depuis le 30/10, 5 avant) pour ce donjon et ce niveau, ou ce boss et cette difficulté : sans buff externe, ilvl à ±3, en priorité avec le même type de tank que toi. « Route en commun » : part des monstres que vous avez tués tous les deux.</p>
             <div class="cw-tablewrap cw-flush">
               <table class="cw-table" data-source="comparisons" data-row-key="row_id">
                 <thead>
@@ -364,7 +364,7 @@ api._run=run;return api;})();</script>
     </div>
   </section>
 
-  <p class="cw-note">Analyses tirées des logs publics Warcraft Logs, mises à jour le 29/10/2026 à 23h40. Chaque clé et chaque boss sont comparés à 5 joueurs de la même spé du top 100, sans buff externe.</p>
+  <p class="cw-note">Analyses tirées des logs publics Warcraft Logs, mises à jour le <span id="cw-maj">—</span>. Chaque clé et chaque boss sont comparés aux meilleurs joueurs de la même spé du top 100 (10 par clé ou par boss depuis le 30/10), sans buff externe.</p>
 </div>
 
 <script>
@@ -1038,4 +1038,4 @@ api._run=run;return api;})();</script>
   });
 </script>
 
-<script>dash._run();</script></body></html>
+<script>dash._run();var m=document.getElementById("cw-maj");if(m)m.textContent=window.__DATA_AT||"—";</script></body></html>
